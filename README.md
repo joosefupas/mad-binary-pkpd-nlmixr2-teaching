@@ -313,59 +313,7 @@ seed = 12345
 
 This helps make the output reproducible across runs, although small differences may still occur across package versions or operating systems.
 
-## Troubleshooting
 
-### The Quarto document does not render
-
-Check that:
-
-- Quarto is installed.
-- R is installed.
-- The required packages are installed.
-- The working directory contains all required files.
-- `vpc_from_nlmixr2_fit.R` is present.
-
-### The VPC section is skipped
-
-The Quarto document checks whether the VPC helper script exists:
-
-```r
-if (file.exists(vpc_function_file)) {
-  source(vpc_function_file)
-} else {
-  message("VPC helper function file was not found. Skipping VPC section.")
-}
-```
-
-Make sure this file is in the same directory as the Quarto document:
-
-```text
-vpc_from_nlmixr2_fit.R
-```
-
-### Package installation issues
-
-Some packages, especially `nlmixr2` and `rxode2`, may require additional system dependencies. In a classroom setting, instructors may wish to provide a preconfigured R environment.
-
-## Suggested repository use
-
-This repository can be used for:
-
-- Graduate pharmacometrics teaching.
-- Clinical pharmacology workshops.
-- PK/PD modeling demonstrations.
-- Binary endpoint modeling tutorials.
-- Exploratory data analysis training.
-- Visual predictive check demonstrations.
-
-## Key takeaways
-
-- Binary pharmacodynamic data can be summarised using responder rates and binomial confidence intervals.
-- Dose-response and exposure-response plots provide complementary information.
-- Longitudinal visualisation helps evaluate onset, accumulation, and plateauing of response.
-- Dosing event overlays help interpret repeated-dose studies.
-- Categorical models can describe binary response probabilities while accounting for covariates and between-subject variability.
-- A categorical VPC can be used to assess whether the model reasonably reproduces observed binary response patterns over time.
 
 ## Suggested citation or acknowledgement
 
