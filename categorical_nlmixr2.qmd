@@ -1,0 +1,736 @@
+---
+title: "Hands-on Session: Multiple Ascending Dose PK/PD Binary Response Analysis"
+subtitle: "Exploratory Analysis, Dose-Response, Longitudinal Summaries, and nlmixr2 Modeling"
+author: "Teaching Session"
+date: today
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-fold: false
+    code-tools: true
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+# Learning objectives
+
+By the end of this hands-on session, students should be able to:
+
+- Understand the structure of a simulated multiple ascending dose PK/PD dataset.
+- Filter and prepare binary pharmacodynamic response data.
+- Summarise binary responder rates using exact binomial confidence intervals.
+- Visualise longitudinal response patterns over time.
+- Explore dose-response relationships.
+- Prepare data for categorical modeling in `nlmixr2`.
+- Fit a simple binary response model.
+- Generate a categorical visual predictive check.
+
+# Dataset description
+
+This session uses a model-generated multiple ascending dose dataset that mimics an orally administered small molecule.
+
+The dataset includes pharmacokinetic and pharmacodynamic endpoints:
+
+| Column | Description |
+|---|---|
+| `ID` | Unique subject ID |
+| `TIME` | Time relative to first drug administration |
+| `NOMTIME` | Nominal time |
+| `TIMEUNIT` | Unit of time |
+| `AMT` | Dosing amount in mg |
+| `LIDV` | Observation value |
+| `CMT` | Compartment or endpoint identifier |
+| `NAME` | Description of event |
+| `EVENTU` | Unit of observation |
+| `CENS` | Censoring indicator |
+| `EVID` | Event ID: 0 observation, 1 dosing |
+| `WEIGHTB` | Baseline body weight |
+| `SEX` | Sex |
+| `TRTACT` | Treatment group label |
+| `DOSE` | Randomised dose in mg |
+| `PROFDAY` | Profile day |
+| `PROFTIME` | Time within profile day |
+| `CYCLE` | Number of drug administrations received |
+
+Compartment mapping:
+
+| `CMT` | Meaning |
+|---|---|
+| 1 | Dosing event |
+| 2 | PK concentration |
+| 3 | Continuous response |
+| 4 | Count response |
+| 5 | Ordinal response |
+| 6 | Binary response |
+
+# Setup
+
+```{r}
+library(gridExtra)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(scales)
+library(xgxr)
+library(RColorBrewer)
+library(binom)
+library(nlmixr2)
+library(rxode2)
+library(MASS)
+```
+
+```{r}
+set.seed(12345)
+
+status <- "DRAFT"
+
+xgx_theme_set()
+```
+
+# Define analysis constants
+
+```{r}
+DOSE_CMT <- 1
+PK_CMT <- 2
+PD_CMT <- 6
+
+SS_PROFDAY <- 6
+PD_PROFDAYS <- c(0, 2, 4, 6)
+
+time_units_dataset <- "hours"
+time_units_plot <- "days"
+
+trtact_label <- "Dose"
+dose_label <- "Dose (mg)"
+pd_label <- "Responder Rate (%)"
+```
+
+# Load data
+
+The `mad` dataset is available from the `xgxr` package.
+
+```{r}
+data("mad", package = "xgxr")
+
+data <- mad
+```
+
+```{r}
+glimpse(data)
+```
+
+# Prepare dataset
+
+We create:
+
+- `PROFDAY`: profile day derived from nominal time.
+- `DAY_label`: readable day label.
+- `TRTACT_low2high`: treatment factor ordered from low to high dose.
+- `TRTACT_high2low`: treatment factor ordered from high to low dose.
+
+```{r}
+data <- data |>
+  mutate(
+    PROFDAY = case_when(
+      NOMTIME < (SS_PROFDAY - 1) * 24 ~ 1 + floor(NOMTIME / 24),
+      TRUE ~ SS_PROFDAY
+    ),
+    DAY_label = ifelse(PROFDAY > 0, paste("Day", PROFDAY), "Baseline")
+  ) |>
+  arrange(DOSE) |>
+  mutate(
+    TRTACT_low2high = factor(TRTACT, levels = unique(TRTACT)),
+    TRTACT_high2low = factor(TRTACT, levels = rev(unique(TRTACT)))
+  )
+```
+
+```{r}
+glimpse(data)
+```
+
+# Prepare binary PD data
+
+For this session, we focus on the binary pharmacodynamic endpoint.
+
+```{r}
+pd_data <- data |>
+  filter(CMT == PD_CMT) |>
+  mutate(
+    LIDV_jitter = jitter(LIDV, amount = 0.1),
+    DAY_jitter = jitter(PROFDAY, amount = 0.1)
+  )
+```
+
+```{r}
+glimpse(pd_data)
+```
+
+# Helper functions
+
+## Binomial confidence interval
+
+```{r}
+binom_ci <- function(x, n) {
+  ci <- binom::binom.exact(x, n)
+  list(lower = ci$lower, upper = ci$upper)
+}
+```
+
+## Summarise binary response
+
+```{r}
+summarise_binom <- function(df, group_vars) {
+  df |>
+    group_by(across(all_of(group_vars))) |>
+    summarise(
+      n = n(),
+      responders = sum(LIDV, na.rm = TRUE),
+      prop = responders / n,
+      lower = binom::binom.exact(responders, n)$lower,
+      upper = binom::binom.exact(responders, n)$upper,
+      .groups = "drop"
+    )
+}
+```
+
+## Time and response scales
+
+```{r}
+x_time_scale <- function() {
+  xgx_scale_x_time_units(
+    units_dataset = time_units_dataset,
+    units_plot = time_units_plot
+  )
+}
+
+y_resp_scale <- function(limits = c(0, 1)) {
+  scale_y_continuous(labels = percent, limits = limits)
+}
+```
+
+# Colour palette
+
+```{r}
+dose_levels_active <- pd_data |>
+  filter(DOSE > 0) |>
+  distinct(TRTACT_low2high) |>
+  pull(TRTACT_low2high) |>
+  as.character()
+
+dose_pal <- colorRampPalette(brewer.pal(8, "Dark2"))(
+  length(dose_levels_active)
+)
+
+names(dose_pal) <- dose_levels_active
+```
+
+# Exploratory analysis
+
+## Binary responder rate over time by dose
+
+```{r}
+ggplot(pd_data, aes(x = NOMTIME, y = LIDV, color = TRTACT_high2low)) +
+  xgx_stat_ci(
+    distribution = "binomial",
+    position = position_dodge(width = 12),
+    alpha = 0.5
+  ) +
+  x_time_scale() +
+  y_resp_scale(c(0, 1)) +
+  labs(
+    x = "Time (days)",
+    y = pd_label,
+    color = trtact_label,
+    title = "Responder Rate Over Time by Dose"
+  ) +
+  xgx_annotate_status(status)
+```
+
+## Teaching question
+
+- What trend do you observe over time?
+- Are higher doses associated with higher responder rates?
+- At which time points are dose differences most visible?
+
+# Dose-response at steady state
+
+We define Day 6 as the steady-state profile day.
+
+```{r}
+pd_data_ss <- pd_data |>
+  filter(PROFDAY == SS_PROFDAY)
+```
+
+```{r}
+gg_dose_ss <- ggplot(pd_data_ss, aes(x = DOSE, y = LIDV)) +
+  xgx_stat_ci(
+    conf_level = 0.95,
+    distribution = "binomial",
+    geom = list("point", "errorbar")
+  ) +
+  geom_smooth(
+    method = "glm",
+    method.args = list(family = binomial(link = "logit")),
+    color = "black"
+  ) +
+  y_resp_scale(c(0, 1)) +
+  labs(
+    x = dose_label,
+    y = pd_label,
+    title = "Dose-Response at Day 6"
+  ) +
+  xgx_annotate_status(status)
+```
+
+```{r}
+grid.arrange(
+  gg_dose_ss +
+    ggtitle("Dose on Linear Scale"),
+  gg_dose_ss +
+    scale_x_log10(breaks = unique(pd_data_ss$DOSE)) +
+    ggtitle("Dose on Log Scale"),
+  nrow = 1
+)
+```
+
+## Teaching question
+
+- Does the response appear to plateau?
+- Is the relationship approximately monotonic?
+
+# Dose-response by selected profile days
+
+```{r}
+pd_data_days <- pd_data |>
+  filter(PROFDAY %in% PD_PROFDAYS)
+```
+
+```{r}
+ggplot(pd_data_days, aes(x = DOSE, y = LIDV)) +
+  xgx_stat_ci(
+    conf_level = 0.95,
+    distribution = "binomial",
+    geom = list("point", "errorbar")
+  ) +
+  geom_smooth(
+    method = "glm",
+    method.args = list(family = binomial(link = "logit")),
+    color = "black"
+  ) +
+  y_resp_scale(c(0, 1)) +
+  labs(
+    x = dose_label,
+    y = pd_label,
+    title = "Dose-Response by Profile Day"
+  ) +
+  facet_grid(~DAY_label) +
+  xgx_annotate_status(status)
+```
+
+# Exposure-response exploration
+
+Next, we join PK concentration and binary PD response records into a wide format.
+
+```{r}
+pkpd_data_wide <- data |>
+  filter(CMT %in% c(PK_CMT, PD_CMT)) |>
+  transmute(
+    ID,
+    PROFDAY,
+    NOMTIME,
+    CENS,
+    TRTACT_low2high,
+    TRTACT_high2low,
+    endpoint = case_when(
+      CMT == PK_CMT ~ "CONC",
+      CMT == PD_CMT ~ "PD"
+    ),
+    value = LIDV
+  ) |>
+  tidyr::pivot_wider(
+    names_from = endpoint,
+    values_from = value
+  ) |>
+  filter(!is.na(CONC), !is.na(PD))
+```
+
+```{r}
+glimpse(pkpd_data_wide)
+```
+
+```{r}
+pd_binary_label <- "Binary response"
+conc_label <- "PK concentration"
+```
+
+```{r}
+gg <- ggplot(pkpd_data_wide, aes(y = CONC, x = factor(PD))) +
+  geom_boxplot(
+    aes(group = factor(PD)),
+    width = 0.5,
+    outlier.shape = NA,
+    size = 0.7
+  ) +
+  geom_jitter(
+    data = pkpd_data_wide |>
+      filter(CENS == 0, PROFDAY == 5),
+    aes(color = TRTACT_high2low),
+    shape = 19,
+    width = 0.1,
+    height = 0,
+    alpha = 0.5
+  ) +
+  geom_jitter(
+    data = pkpd_data_wide |>
+      filter(CENS == 1, PROFDAY == 5),
+    color = "red",
+    shape = 8,
+    width = 0.1,
+    height = 0,
+    alpha = 0.5
+  ) +
+  xgx_scale_y_log10() +
+  labs(
+    x = pd_binary_label,
+    y = conc_label,
+    color = trtact_label,
+    title = "Exposure by Binary Response"
+  ) +
+  coord_flip()
+
+print(gg)
+```
+
+## Teaching question
+
+- Do responders appear to have higher concentrations than non-responders?
+
+# Longitudinal responder summaries
+
+We summarise responder rates over time by active dose.
+
+```{r}
+pd_sum_active <- summarise_binom(
+  pd_data |>
+    filter(DOSE > 0),
+  c("NOMTIME", "TRTACT_low2high", "TRTACT_high2low", "DOSE")
+)
+```
+
+```{r}
+glimpse(pd_sum_active)
+```
+
+# Dosing event overlays
+
+```{r}
+dose_events <- data |>
+  filter(CMT == DOSE_CMT, DOSE > 0) |>
+  distinct(TRTACT_low2high, DOSE, NOMTIME, PROFDAY) |>
+  arrange(DOSE, NOMTIME)
+
+dose_events_all <- data |>
+  filter(CMT == DOSE_CMT, DOSE > 0) |>
+  distinct(NOMTIME, PROFDAY) |>
+  arrange(NOMTIME)
+```
+
+
+# Faceted longitudinal responder rate by dose
+
+```{r}
+gg_facet_with_dose <- ggplot(
+  pd_sum_active,
+  aes(
+    x = NOMTIME,
+    y = prop,
+    color = TRTACT_low2high,
+    fill = TRTACT_low2high
+  )
+) +
+  geom_ribbon(
+    aes(ymin = lower, ymax = upper),
+    alpha = 0.22,
+    color = NA
+  ) +
+  geom_line(linewidth = 1.1) +
+  geom_point(size = 2) +
+  geom_vline(
+    data = dose_events,
+    aes(xintercept = NOMTIME),
+    linetype = "dashed",
+    color = "gray40",
+    alpha = 0.5,
+    linewidth = 0.5,
+    inherit.aes = FALSE
+  ) +
+  x_time_scale() +
+  y_resp_scale(c(0, 1)) +
+  scale_color_manual(values = dose_pal, guide = "none") +
+  scale_fill_manual(values = dose_pal, guide = "none") +
+  labs(
+    x = "Time (days)",
+    y = pd_label,
+    title = "Longitudinal Responder Rate Over Time Stratified by Dose",
+    subtitle = "Placebo excluded; dashed lines show dosing events"
+  ) +
+  facet_wrap(~TRTACT_low2high) +
+  xgx_annotate_status(status) +
+  theme(
+    plot.title = element_text(face = "bold"),
+    plot.subtitle = element_text(color = "gray30")
+  )
+
+print(gg_facet_with_dose)
+```
+
+# Overall active treatment responder rate
+
+```{r}
+pd_sum_overall_active <- pd_sum_active |>
+  group_by(NOMTIME) |>
+  summarise(
+    n = sum(n),
+    responders = sum(responders),
+    prop = responders / n,
+    lower = binom::binom.exact(responders, n)$lower,
+    upper = binom::binom.exact(responders, n)$upper,
+    .groups = "drop"
+  )
+```
+
+```{r}
+gg_overall_with_dose <- ggplot(
+  pd_sum_overall_active,
+  aes(x = NOMTIME, y = prop)
+) +
+  geom_ribbon(
+    aes(ymin = lower, ymax = upper),
+    fill = "#80CDC1",
+    alpha = 0.35
+  ) +
+  geom_line(
+    color = "#018571",
+    linewidth = 1.2
+  ) +
+  geom_point(
+    color = "#01665E",
+    size = 2.2
+  ) +
+  geom_vline(
+    data = dose_events_all,
+    aes(xintercept = NOMTIME),
+    linetype = "dashed",
+    color = "gray40",
+    alpha = 0.6,
+    linewidth = 0.5,
+    inherit.aes = FALSE
+  ) +
+  x_time_scale() +
+  y_resp_scale(c(0, 1)) +
+  labs(
+    x = "Time (days)",
+    y = pd_label,
+    title = "Longitudinal Responder Rate Over Time Overall",
+    subtitle = "Pooled active treatment arms; placebo excluded; dashed lines show dosing events"
+  ) +
+  xgx_annotate_status(status) +
+  theme(
+    plot.title = element_text(face = "bold"),
+    plot.subtitle = element_text(color = "gray30")
+  )
+
+print(gg_overall_with_dose)
+```
+
+# Study design summaries
+
+```{r}
+study_design_table <- data |>
+  group_by(TRTACT_low2high, DOSE) |>
+  summarise(
+    n_patients = n_distinct(ID),
+    n_total_records = n(),
+    n_pd_records = sum(CMT == PD_CMT, na.rm = TRUE),
+    n_dose_records = sum(CMT == DOSE_CMT, na.rm = TRUE),
+    n_nominal_times = n_distinct(NOMTIME),
+    nominal_times = paste(sort(unique(NOMTIME)), collapse = ", "),
+    .groups = "drop"
+  ) |>
+  arrange(DOSE)
+
+print(study_design_table)
+```
+
+
+# Prepare data for nlmixr2
+
+For the model, we keep dosing records and binary PD records.
+
+```{r}
+fit_data <- data |>
+  mutate(
+    ID = factor(ID),
+    TIME = as.numeric(TIME),
+    NOMTIME = as.numeric(NOMTIME),
+    DV = as.numeric(LIDV),
+    WEIGHTB = as.numeric(WEIGHTB),
+    SEX = case_when(
+      SEX %in% c("Male", "MALE", "male", "1", 1) ~ 1,
+      TRUE ~ 0
+    ),
+    PROFDAY = as.numeric(PROFDAY),
+    TRTACT = factor(TRTACT_low2high, levels = levels(TRTACT_low2high))
+  ) |>
+  filter(NAME %in% c("Dosing", "PD - Binary")) |>
+  filter(TRTACT != "Placebo") |>
+  arrange(ID, TIME)
+```
+
+```{r}
+glimpse(fit_data)
+```
+
+# Binary response model using nlmixr2
+
+This model describes the probability of binary response using a logit relationship.
+
+The linear predictor is:
+
+$$
+\text{logit}(p_i) =
+\theta_0 +
+\text{treatment effect} +
+\text{weight effect} +
+\text{sex effect} +
+\text{time effect}
+$$
+
+Then:
+
+$$
+Y_i \sim \text{Binomial}(n = 1, p_i)
+$$
+
+```{r}
+categorical_nlmixr <- function() {
+  ini({
+    theta0_pop <- -3.18
+    beta_time_pop <- -0.05
+
+    beta_theta0_TRTACT_1600_mg <- 0.60
+    beta_theta0_TRTACT_200_mg <- -0.48
+    beta_theta0_TRTACT_400_mg <- -0.11
+    beta_theta0_TRTACT_800_mg <- 0.67
+
+    beta_theta0_WEIGHTB <- -0.01
+    beta_theta0_SEX_Male <- 1.68
+    beta_beta_time_SEX_Male <- -1.98
+
+    eta.theta0 ~ 1.8e-06
+    eta.beta_time ~ 0.139
+
+    n <- fix(1)
+  })
+
+  model({
+    trt_1600 <- (TRTACT == "1600 mg")
+    trt_200  <- (TRTACT == "200 mg")
+    trt_400  <- (TRTACT == "400 mg")
+    trt_800  <- (TRTACT == "800 mg")
+
+    theta0 <- theta0_pop +
+      beta_theta0_TRTACT_1600_mg * trt_1600 +
+      beta_theta0_TRTACT_200_mg * trt_200 +
+      beta_theta0_TRTACT_400_mg * trt_400 +
+      beta_theta0_TRTACT_800_mg * trt_800 +
+      beta_theta0_WEIGHTB * WEIGHTB +
+      beta_theta0_SEX_Male * SEX +
+      eta.theta0
+
+    beta_time <- exp(
+      beta_time_pop +
+        beta_beta_time_SEX_Male * SEX +
+        eta.beta_time
+    )
+
+    lp <- theta0 + beta_time * PROFDAY
+
+    p1 <- 1 / (1 + exp(-lp))
+
+    var ~ binom(n, p1)
+  })
+}
+```
+
+# Fit model
+
+Depending on the computer and package versions, this step may take some time.
+
+```{r,eval=T}
+fit_nlmixr2 <- nlmixr2(
+  categorical_nlmixr,
+  fit_data,
+  est = "focei",
+  control = foceiControl(outerOpt = "bobyqa")
+)
+```
+
+```{r}
+#fit_nlmixr2 = readRDS("fit_nlmixr2.RDS")
+print(fit_nlmixr2)
+```
+
+
+# Optional categorical VPC
+
+This section assumes that a helper function named `plot_categorical_vpc_nlmixr2()` is available.
+
+For example, in your teaching environment, you may provide students with a separate R script containing this function.
+
+```{r}
+vpc_function_file <- "vpc_from_nlmixr2_fit.R"
+
+if (file.exists(vpc_function_file)) {
+  source(vpc_function_file)
+} else {
+  message("VPC helper function file was not found. Skipping VPC section.")
+}
+```
+
+```{r}
+if (exists("plot_categorical_vpc_nlmixr2")) {
+  p_vpc_nlmixr2 <- plot_categorical_vpc_nlmixr2(
+    fit = fit_nlmixr2,
+    data = fit_data,
+    id_col = "ID",
+    time_col = "TIME",
+    dv_col = "DV",
+    pred_var = "p1",
+    nBins = 10,
+    nSim = 200,
+    ci = 0.95,
+    seed = 12345,
+    x_transform = function(x) x / 24,
+    xlab = "Time (days)",
+    ylab = "P(Y = 1)",
+    title = "Categorical VPC from nlmixr2 Fit"
+  )
+
+  print(p_vpc_nlmixr2)
+}
+```
+
+
+
+# Key takeaways
+
+- Binary pharmacodynamic data can be summarised using responder rates and binomial confidence intervals.
+- Dose-response and exposure-response plots provide complementary insights.
+- Longitudinal visualisation helps assess onset, accumulation, and potential plateauing of response.
+- Dosing event overlays are useful for interpreting repeated-dose studies.
+- Categorical models can describe binary response probabilities while accounting for covariates and interindividual variability.
