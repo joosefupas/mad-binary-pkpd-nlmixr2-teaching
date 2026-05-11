@@ -344,34 +344,6 @@ to:
 eval = TRUE
 ```
 
-or run the model-fitting code interactively.
-
-## Teaching questions included in the Quarto document
-
-The document includes discussion prompts such as:
-
-- What trend do you observe over time?
-- Are higher doses associated with higher responder rates?
-- At which time points are dose differences most visible?
-- Does the response appear to plateau?
-- Is the relationship approximately monotonic?
-- Do responders appear to have higher concentrations than non-responders?
-
-These questions are intended to encourage interpretation rather than only code execution.
-
-## Expected outputs
-
-When the Quarto document is rendered successfully, students should see:
-
-- Dataset structure summaries.
-- Binary responder-rate plots.
-- Dose-response plots.
-- Exposure-response plots.
-- Longitudinal response plots.
-- Study design summary table.
-- Printed `nlmixr2` model output.
-- Categorical VPC plot.
-
 ## Reproducibility
 
 The analysis uses a fixed random seed:
