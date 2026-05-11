@@ -1,4 +1,3 @@
-```markdown
 # Multiple Ascending Dose PK/PD Binary Response Hands-on Session
 
 This repository contains teaching material for a hands-on pharmacometrics session using a simulated multiple ascending dose PK/PD dataset.
