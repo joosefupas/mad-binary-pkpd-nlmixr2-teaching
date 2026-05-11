@@ -12,8 +12,7 @@ The repository is composed of the following main files:
 .
 ├── README.md
 ├── mad_binary_pd_teaching_session.qmd
-├── vpc_from_nlmixr2_fit.R
-└── fit_nlmixr2.RDS
+└── vpc_from_nlmixr2_fit.R
 ```
 
 ## File descriptions
@@ -65,18 +64,6 @@ This script is sourced inside the Quarto document:
 ```r
 source("vpc_from_nlmixr2_fit.R")
 ```
-
-### `fit_nlmixr2.RDS`
-
-Pre-fitted `nlmixr2` model object.
-
-The model fitting step can take time depending on the computer and package versions. For teaching convenience, the Quarto document loads this fitted object directly:
-
-```r
-fit_nlmixr2 <- readRDS("fit_nlmixr2.RDS")
-```
-
-The original model-fitting code is kept in the Quarto document with `eval = FALSE` so that students can inspect it without automatically refitting the model during rendering.
 
 ## Dataset
 
@@ -309,40 +296,6 @@ The helper function used is:
 plot_categorical_vpc_nlmixr2()
 ```
 
-## Notes for instructors
-
-The model fitting code is included but not evaluated by default:
-
-```r
-```{r, eval=FALSE}
-fit_nlmixr2 <- nlmixr2(
-  categorical_nlmixr,
-  fit_data,
-  est = "focei",
-  control = foceiControl(outerOpt = "bobyqa")
-)
-```
-```
-
-Instead, the pre-fitted model object is loaded:
-
-```r
-fit_nlmixr2 <- readRDS("fit_nlmixr2.RDS")
-```
-
-This makes the session faster and more reliable in a classroom setting.
-
-If instructors want students to fit the model themselves, they can change the chunk option from:
-
-```r
-eval = FALSE
-```
-
-to:
-
-```r
-eval = TRUE
-```
 
 ## Reproducibility
 
@@ -370,7 +323,6 @@ Check that:
 - R is installed.
 - The required packages are installed.
 - The working directory contains all required files.
-- `fit_nlmixr2.RDS` is present.
 - `vpc_from_nlmixr2_fit.R` is present.
 
 ### The VPC section is skipped
@@ -389,20 +341,6 @@ Make sure this file is in the same directory as the Quarto document:
 
 ```text
 vpc_from_nlmixr2_fit.R
-```
-
-### The fitted model object is not found
-
-Make sure the following file is present:
-
-```text
-fit_nlmixr2.RDS
-```
-
-The Quarto document loads it using:
-
-```r
-fit_nlmixr2 <- readRDS("fit_nlmixr2.RDS")
 ```
 
 ### Package installation issues
