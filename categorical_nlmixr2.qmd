@@ -690,8 +690,6 @@ print(fit_nlmixr2)
 
 This section assumes that a helper function named `plot_categorical_vpc_nlmixr2()` is available.
 
-For example, in your teaching environment, you may provide students with a separate R script containing this function.
-
 ```{r}
 vpc_function_file <- "vpc_from_nlmixr2_fit.R"
 
