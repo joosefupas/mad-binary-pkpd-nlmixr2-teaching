@@ -2,23 +2,21 @@
 
 This repository contains teaching material for a hands-on pharmacometrics session using a simulated multiple ascending dose PK/PD dataset.
 
-The session focuses on exploratory analysis, binary pharmacodynamic response summaries, dose-response visualisation, longitudinal responder-rate analysis, and categorical modeling using `nlmixr2`.
+The session focuses on exploratory analysis, binary pharmacodynamic response summaries, dose-response visualisation, longitudinal responder-rate analysis, categorical modeling using `nlmixr2`, and categorical visual predictive checks.
 
-The main modeling endpoint is a binary pharmacodynamic response, where each observation is either:
+The main endpoint is a binary pharmacodynamic response, where each observation is either a responder or a non-responder.
 
 $$
 Y = 1
 $$
 
-for a responder, or
+means responder, and:
 
 $$
 Y = 0
 $$
 
-for a non-responder.
-
-A fitted categorical `nlmixr2` model is used to simulate binary response profiles and generate a categorical visual predictive check, or categorical VPC.
+means non-responder.
 
 ---
 
@@ -61,7 +59,7 @@ The file is intended to be rendered as an HTML teaching document.
 
 ### `vpc_from_nlmixr2_fit.R`
 
-Helper R script containing utility functions for generating a categorical VPC from an `nlmixr2` fit.
+Helper R script containing utility functions for generating a categorical visual predictive check, or categorical VPC, from an `nlmixr2` fit.
 
 The main user-facing function is:
 
@@ -79,72 +77,37 @@ This function:
 - Computes simulated prediction intervals.
 - Overlays empirical response probabilities with model-based simulated intervals.
 
-This script is sourced inside the Quarto document:
-
-```r
-source("vpc_from_nlmixr2_fit.R")
-```
-
 ---
 
-## Exact integration point for `vpc_from_nlmixr2_fit.R`
+## Notes on mathematical notation
 
-The helper file should be placed in the same directory as:
+This README uses GitHub-compatible dollar-sign math notation.
+
+Inline expressions are written as `$Y = 1$`.
+
+Display equations are written as:
 
 ```text
-mad_binary_pd_teaching_session.qmd
+$$
+Y = 1
+$$
 ```
 
-The source call should be added in the Quarto document after the package-loading chunk and before the first use of `plot_categorical_vpc_nlmixr2()`.
+To improve GitHub rendering compatibility, this README avoids LaTeX commands that may not be supported by GitHub Markdown, such as `\operatorname`.
 
-Recommended location in `mad_binary_pd_teaching_session.qmd`:
+Distribution names and function names are written using `\mathrm`.
 
-```r
-library(gridExtra)
-library(ggplot2)
-library(dplyr)
-library(tidyr)
-library(scales)
-library(xgxr)
-library(RColorBrewer)
-library(binom)
-library(nlmixr2)
-library(rxode2)
-library(MASS)
+For example:
 
-source("vpc_from_nlmixr2_fit.R")
-```
+$$
+Y_{ij} \sim \mathrm{Bernoulli}(p_{ij})
+$$
 
-The categorical VPC should be generated only after:
+Variable names that contain underscores are escaped inside math mode. For example, the indicator variable `SEX_female` is written as:
 
-1. The binary PD analysis dataset has been prepared.
-2. The `nlmixr2` fitted model object has been loaded.
-3. The data columns required by the model are available in the dataset.
-
-A typical call is:
-
-```r
-plot_categorical_vpc_nlmixr2(
-  fit = fit,
-  data = modeling_data,
-  id_col = "ID",
-  time_col = "TIME",
-  dv_col = "DV",
-  pred_var = "p1",
-  nBins = 10,
-  nSim = 200,
-  ci = 0.95,
-  seed = 12345,
-  x_transform = function(x) x / 24,
-  xlab = "Time (days)",
-  ylab = "P(Y = 1)",
-  title = "Categorical VPC"
-)
-```
-
-The argument `fit` should be the fitted `nlmixr2` model object.
-
-The argument `data` should be the analysis dataset used for model-based prediction and VPC simulation.
+$$
+\mathrm{SEX\_female}_i
+$$
 
 ---
 
@@ -269,6 +232,67 @@ quarto render mad_binary_pd_teaching_session.qmd
 
 ---
 
+## Exact integration point for `vpc_from_nlmixr2_fit.R`
+
+The helper file should be placed in the same directory as:
+
+```text
+mad_binary_pd_teaching_session.qmd
+```
+
+The source call should be added in the Quarto document after the package-loading chunk and before the first use of `plot_categorical_vpc_nlmixr2()`.
+
+Recommended location in `mad_binary_pd_teaching_session.qmd`:
+
+```r
+library(gridExtra)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(scales)
+library(xgxr)
+library(RColorBrewer)
+library(binom)
+library(nlmixr2)
+library(rxode2)
+library(MASS)
+
+source("vpc_from_nlmixr2_fit.R")
+```
+
+The categorical VPC should be generated only after:
+
+1. The binary PD analysis dataset has been prepared.
+2. The `nlmixr2` fitted model object has been loaded.
+3. The data columns required by the model are available in the dataset.
+
+A typical call is:
+
+```r
+plot_categorical_vpc_nlmixr2(
+  fit = fit,
+  data = modeling_data,
+  id_col = "ID",
+  time_col = "TIME",
+  dv_col = "DV",
+  pred_var = "p1",
+  nBins = 10,
+  nSim = 200,
+  ci = 0.95,
+  seed = 12345,
+  x_transform = function(x) x / 24,
+  xlab = "Time (days)",
+  ylab = "P(Y = 1)",
+  title = "Categorical VPC"
+)
+```
+
+The argument `fit` should be the fitted `nlmixr2` model object.
+
+The argument `data` should be the analysis dataset used for model-based prediction and VPC simulation.
+
+---
+
 ## Recommended workflow for students
 
 Students should work through the Quarto document section by section:
@@ -293,9 +317,9 @@ Students should work through the Quarto document section by section:
 
 ---
 
-# Main analysis steps
+## Main analysis steps
 
-## 1. Data preparation
+### 1. Data preparation
 
 The Quarto document creates additional analysis variables:
 
@@ -306,13 +330,11 @@ TRTACT_low2high
 TRTACT_high2low
 ```
 
-These variables are used for plotting, grouping, and model preparation.
+These variables are used for plotting, grouping, longitudinal summaries, and model preparation.
 
----
+### 2. Binary PD filtering
 
-## 2. Binary PD filtering
-
-The binary response endpoint is selected using:
+The binary pharmacodynamic response endpoint is selected using:
 
 ```r
 pd_data <- data |>
@@ -325,7 +347,7 @@ where:
 PD_CMT <- 6
 ```
 
-The binary endpoint is represented mathematically as:
+The binary response for subject `$i$` at observation `$j$` is represented as:
 
 $$
 Y_{ij} \in \{0, 1\}
@@ -333,13 +355,10 @@ $$
 
 where:
 
-- \(Y_{ij}\) is the observed binary response for subject $\(i\)$ at observation time \(j\).
-- $\(Y_{ij} = 1\)$ means the subject is a responder.
-- $$\(Y_{ij} = 0\)$$ means the subject is a non-responder.
+- `$Y_{ij} = 1$` means subject `$i$` is a responder at observation `$j$`.
+- `$Y_{ij} = 0$` means subject `$i$` is a non-responder at observation `$j$`.
 
----
-
-## 3. Binomial responder summaries
+### 3. Binomial responder summaries
 
 Responder rates are summarised using exact binomial confidence intervals.
 
@@ -349,7 +368,7 @@ The key helper function is:
 summarise_binom()
 ```
 
-For a group with \(n\) binary observations and \(r\) responders, the empirical responder proportion is:
+For a group with `$n$` binary observations and `$r$` responders, the empirical responder proportion is:
 
 $$
 \hat{p} = \frac{r}{n}
@@ -357,9 +376,9 @@ $$
 
 where:
 
-- \(n\) is the number of non-missing binary observations.
-- \(r = \sum_{i=1}^{n} Y_i\) is the number of responders.
-- \(\hat{p}\) is the observed responder proportion.
+- `$n$` is the number of non-missing binary observations.
+- `$r = \sum_{i=1}^{n} Y_i$` is the number of responders.
+- `$\hat{p}$` is the observed responder proportion.
 
 The function returns:
 
@@ -369,9 +388,13 @@ The function returns:
 - Lower confidence interval.
 - Upper confidence interval.
 
----
+The exact binomial confidence interval is different from the VPC prediction interval.
 
-## 4. Exploratory plots
+The confidence interval summarizes uncertainty around an observed responder probability.
+
+The VPC prediction interval summarizes the distribution of simulated responder proportions under the fitted model.
+
+### 4. Exploratory plots
 
 The session includes plots for:
 
@@ -382,9 +405,7 @@ The session includes plots for:
 - Longitudinal responder rate by dose.
 - Overall active-treatment responder rate.
 
----
-
-## 5. Study design summaries
+### 5. Study design summaries
 
 The Quarto document creates a treatment-level summary table containing:
 
@@ -395,83 +416,106 @@ The Quarto document creates a treatment-level summary table containing:
 - Number of nominal sampling times.
 - List of nominal sampling times.
 
----
-
-# Categorical `nlmixr2` model
-
-## 6. Binary response model
+### 6. Categorical modeling
 
 The categorical model describes the probability of binary response using a logit relationship.
+
+The model estimates the response probability:
+
+$$
+p_{ij} = \mathrm{P}(Y_{ij} = 1)
+$$
+
+and uses this probability to describe the binary endpoint:
+
+$$
+Y_{ij} \sim \mathrm{Bernoulli}(p_{ij})
+$$
+
+The fitted model is then used to generate a categorical VPC.
+
+---
+
+## `nlmixr2` binary response model
+
+The categorical model describes the probability of binary response using a logit relationship.
+
+For subject `$i$` at observation `$j$`, the binary response is:
+
+$$
+Y_{ij} \in \{0, 1\}
+$$
+
+where:
+
+- `$Y_{ij} = 1$` means subject `$i$` is a responder at observation `$j$`.
+- `$Y_{ij} = 0$` means subject `$i$` is a non-responder at observation `$j$`.
+
+The model-predicted probability of response is:
+
+$$
+p_{ij} = \mathrm{P}(Y_{ij} = 1)
+$$
 
 The binary outcome is modeled as:
 
 $$
-Y_{ij} \sim \operatorname{Bernoulli}(p_{ij})
+Y_{ij} \sim \mathrm{Bernoulli}(p_{ij})
 $$
 
 or equivalently:
 
 $$
-Y_{ij} \sim \operatorname{Binomial}(1, p_{ij})
+Y_{ij} \sim \mathrm{Binomial}(1, p_{ij})
 $$
-
-where:
-
-- \(Y_{ij}\) is the binary response for subject \(i\) at time \(j\).
-- \(p_{ij}\) is the model-predicted probability that \(Y_{ij} = 1\).
-- \(1 - p_{ij}\) is the model-predicted probability that \(Y_{ij} = 0\).
 
 The logit transformation is:
 
 $$
-\operatorname{logit}(p_{ij}) = \log \left( \frac{p_{ij}}{1 - p_{ij}} \right)
+\mathrm{logit}(p_{ij}) =
+\log \left(\frac{p_{ij}}{1 - p_{ij}}\right)
 $$
 
 The inverse-logit transformation is:
 
 $$
-p_{ij} = \frac{\exp(\eta_{ij})}{1 + \exp(\eta_{ij})}
+p_{ij} =
+\frac{1}{1 + \exp(-\eta_{ij})}
 $$
 
-or equivalently:
+where `$\eta_{ij}$` is the linear predictor.
+
+A general binary response model can be written as:
 
 $$
-p_{ij} = \frac{1}{1 + \exp(-\eta_{ij})}
-$$
-
-where \(\eta_{ij}\) is the linear predictor.
-
-The general form of the model is:
-
-$$
-\operatorname{logit}(p_{ij}) =
+\mathrm{logit}(p_{ij}) =
 \beta_0
-+ \beta_{\text{trt}} \cdot \text{TRT}_i
-+ \beta_{\text{wt}} \cdot \text{WT}_i
-+ \beta_{\text{sex}} \cdot \text{SEX}_i
-+ \beta_{\text{time}} \cdot t_{ij}
++ \beta_{\mathrm{trt}} \cdot \mathrm{TRT}_i
++ \beta_{\mathrm{wt}} \cdot \mathrm{WT}_i
++ \beta_{\mathrm{sex}} \cdot \mathrm{SEX}_i
++ \beta_{\mathrm{time}} \cdot t_{ij}
 + b_i
 $$
 
 where:
 
-- \(\beta_0\) is the baseline intercept.
-- \(\beta_{\text{trt}}\) is a treatment effect.
-- \(\beta_{\text{wt}}\) is a body weight effect.
-- \(\beta_{\text{sex}}\) is a sex effect.
-- \(\beta_{\text{time}}\) is a time effect.
-- \(t_{ij}\) is the observation time for subject \(i\) at observation \(j\).
-- \(b_i\) is a subject-specific random effect.
+- `$\beta_0$` is the baseline intercept.
+- `$\beta_{\mathrm{trt}}$` is a treatment effect.
+- `$\beta_{\mathrm{wt}}$` is a body weight effect.
+- `$\beta_{\mathrm{sex}}$` is a sex effect.
+- `$\beta_{\mathrm{time}}$` is a time effect.
+- `$t_{ij}$` is the observation time for subject `$i$` at observation `$j$`.
+- `$b_i$` is a subject-specific random effect.
 
 The exact model structure depends on the `nlmixr2` model used in the teaching script.
 
 ---
 
-# Logic of `vpc_from_nlmixr2_fit.R`
+## Logic of `vpc_from_nlmixr2_fit.R`
 
-The helper script contains several internal functions and one main plotting function.
+The helper script contains internal utility functions and one main user-facing plotting function.
 
-Internal helper functions are named with a leading dot, for example:
+Internal helper functions are named with a leading dot:
 
 ```r
 .normCategoryLabel()
@@ -482,15 +526,31 @@ Internal helper functions are named with a leading dot, for example:
 .buildCategoricalSimParams()
 ```
 
-The main function is:
+The main user-facing function is:
 
 ```r
 plot_categorical_vpc_nlmixr2()
 ```
 
+The function generates a categorical VPC from a fitted `nlmixr2` binary response model.
+
+It compares:
+
+- The empirical observed responder probability.
+- The model-predicted median simulated responder probability.
+- A simulation-based prediction interval for the binned responder proportion.
+
+The shaded interval in the VPC is not a confidence interval for the observed data.
+
+It is a prediction interval obtained from repeated simulations under the fitted model.
+
+It answers the question:
+
+> If the fitted model were true, and the same study design were repeated many times, what range of responder proportions would we expect in each time bin?
+
 ---
 
-## 7. Label normalization
+## Label normalization
 
 Function:
 
@@ -504,74 +564,39 @@ This function converts categorical labels into safe, consistent, machine-readabl
 
 For example:
 
-```r
-"Female"
-```
-
-becomes:
-
 ```text
-female
+"Female" -> "female"
+"High Dose Group" -> "high_dose_group"
+"Dose 100 mg" -> "dose_100_mg"
 ```
 
-and:
-
-```r
-"High Dose Group"
-```
-
-becomes:
-
-```text
-high_dose_group
-```
-
-The transformation can be written as a normalization function:
+The normalization function is denoted as:
 
 $$
 N(x)
 $$
 
-where \(x\) is an original category label and \(N(x)\) is the normalized label.
+where:
+
+- `$x$` is the original category label.
+- `$N(x)$` is the normalized label.
 
 The normalization steps are:
 
-1. Convert to character.
+1. Convert values to character.
 2. Remove leading and trailing whitespace.
-3. Convert to lowercase.
+3. Convert text to lowercase.
 4. Replace non-alphanumeric characters with underscores.
 5. Collapse repeated underscores.
-6. Remove leading or trailing underscores.
+6. Remove leading and trailing underscores.
 
-In code:
-
-```r
-.normCategoryLabel <- function(x) {
-  x <- as.character(x)
-  x <- trimws(x)
-  x <- tolower(x)
-  x <- gsub("[^[:alnum:]]+", "_", x)
-  x <- gsub("_+", "_", x)
-  x <- gsub("^_+|_+$", "", x)
-  x
-}
-```
-
-This is needed because `rxode2` model code works more naturally with numeric variables than with direct string comparisons.
+This is needed because `rxode2::rxSolve()` works more naturally with numeric covariates than with direct string comparisons.
 
 ---
 
-## 8. Extracting categorical string comparisons from the model
+## Categorical string comparisons and indicator variables
 
-Function:
-
-```r
-.extractStringComparisons()
-```
-
-Purpose:
-
-This function searches the `nlmixr2` model expressions for comparisons such as:
+Some `nlmixr2` models may contain categorical string comparisons, for example:
 
 ```r
 SEX == "Female"
@@ -583,35 +608,9 @@ or:
 TRTACT == "Dose 100 mg"
 ```
 
-It extracts four pieces of information:
+These comparisons are convenient in model code, but they are not ideal for direct simulation with `rxode2::rxSolve()`.
 
-| Column | Meaning |
-|---|---|
-| `variable` | The categorical variable name, for example `SEX` |
-| `label` | The original string label, for example `"Female"` |
-| `normalized` | The normalized label, for example `female` |
-| `indicator` | The generated numeric indicator name, for example `SEX_female` |
-
-Mathematically, a string comparison such as:
-
-$$
-X_i = \ell
-$$
-
-is replaced by an indicator variable:
-
-$$
-I_{i,\ell} = \mathbf{1}\{N(X_i) = N(\ell)\}
-$$
-
-where:
-
-- \(X_i\) is the observed category for subject or record \(i\).
-- \(\ell\) is the category label used in the model.
-- \(N(\cdot)\) is the label normalization function.
-- \(\mathbf{1}\{\cdot\}\) is the indicator function.
-- \(I_{i,\ell} = 1\) if the normalized observed category equals the normalized model label.
-- \(I_{i,\ell} = 0\) otherwise.
+The helper script therefore converts string comparisons into numeric indicator variables.
 
 For example:
 
@@ -619,22 +618,98 @@ For example:
 SEX == "Female"
 ```
 
-becomes:
+is rewritten as:
 
 ```r
 SEX_female
 ```
 
-where:
+Mathematically, this categorical comparison is converted into an indicator variable:
 
 $$
-\text{SEX\_female}_i =
-\mathbf{1}\{N(\text{SEX}_i) = N(\text{Female})\}
+\mathrm{SEX\_female}_i =
+\mathbf{1}\left\{N(\mathrm{SEX}_i) = N(\mathrm{Female})\right\}
 $$
+
+where:
+
+- `$N(\cdot)$` is the label-normalization function.
+- `$\mathbf{1}\{\cdot\}$` is an indicator function.
+- `$\mathrm{SEX\_female}_i = 1$` if subject or record `$i$` has normalized sex label `"female"`.
+- `$\mathrm{SEX\_female}_i = 0$` otherwise.
+
+More generally, a categorical comparison:
+
+$$
+X_i = \ell
+$$
+
+is replaced by:
+
+$$
+I_{i,\ell} =
+\mathbf{1}\left\{N(X_i) = N(\ell)\right\}
+$$
+
+where:
+
+- `$X_i$` is the observed categorical value for subject or record `$i$`.
+- `$\ell$` is the category label used in the model.
+- `$I_{i,\ell}$` is the numeric indicator variable.
 
 ---
 
-## 9. Rewriting model expressions for simulation
+## Extracting categorical string comparisons
+
+Function:
+
+```r
+.extractStringComparisons()
+```
+
+Purpose:
+
+This function searches the `nlmixr2` model expressions for string comparisons.
+
+Examples include:
+
+```r
+SEX == "Female"
+```
+
+and:
+
+```r
+TRTACT == "Dose 100 mg"
+```
+
+For each comparison, it extracts:
+
+- The categorical variable name.
+- The original string label.
+- The normalized label.
+- The generated indicator-variable name.
+
+For example, from:
+
+```r
+SEX == "Female"
+```
+
+the function creates:
+
+```text
+variable: SEX
+label: Female
+normalized: female
+indicator: SEX_female
+```
+
+This mapping is later used to rewrite the model and prepare the simulation data.
+
+---
+
+## Rewriting model expressions for simulation
 
 Function:
 
@@ -644,7 +719,7 @@ Function:
 
 Purpose:
 
-This function rewrites the model code so that string comparisons are replaced by numeric indicator variables.
+This function rewrites model code so that categorical string comparisons are replaced by numeric indicator variables.
 
 For example, a model expression like:
 
@@ -658,32 +733,35 @@ is rewritten as:
 logit_p1 <- theta0 + theta_sex * SEX_female
 ```
 
-This matters because simulation with `rxode2::rxSolve()` requires variables that can be supplied numerically in the event or covariate dataset.
-
-The function also removes likelihood lines of the form:
+The function also removes likelihood lines such as:
 
 ```r
 DV ~ binom(...)
 ```
 
-This is done because the VPC simulation does not refit the likelihood. Instead, it:
+This is done because the VPC simulation does not refit the likelihood.
+
+Instead, the function:
 
 1. Evaluates the model-predicted probability.
 2. Simulates binary outcomes from that probability.
+3. Summarises the simulated binary outcomes by time bin.
 
-The function appends a new prediction variable:
+The function appends a prediction variable:
 
 ```r
 rx_pred_ <- p1
 ```
 
-where `p1` is the default prediction variable. This can be changed using:
+where `p1` is the default predicted probability variable.
+
+If your model uses a different probability variable, pass it through:
 
 ```r
-pred_var = "p1"
+pred_var = "your_probability_variable"
 ```
 
-The returned object contains:
+The function returns a list containing:
 
 ```r
 list(
@@ -701,7 +779,7 @@ where:
 
 ---
 
-## 10. Preparing categorical solve data
+## Preparing categorical solve data
 
 Function:
 
@@ -711,7 +789,7 @@ Function:
 
 Purpose:
 
-This function prepares the dataset for `rxode2::rxSolve()`.
+This function prepares the input dataset for `rxode2::rxSolve()`.
 
 It creates standard internal columns:
 
@@ -762,22 +840,21 @@ SEX_female
 defined as:
 
 $$
-\text{SEX\_female}_{ij}
-=
-\mathbf{1}\{N(\text{SEX}_{ij}) = N(\text{Female})\}
+\mathrm{SEX\_female}_{ij} =
+\mathbf{1}\left\{N(\mathrm{SEX}_{ij}) = N(\mathrm{Female})\right\}
 $$
 
 where:
 
-- \(i\) indexes subjects.
-- \(j\) indexes records or observations.
-- \(N(\cdot)\) is the normalization function.
+- `$i$` indexes subjects.
+- `$j$` indexes records or observations.
+- `$N(\cdot)$` is the normalization function.
 
 Missing indicator values are set to zero.
 
 ---
 
-## 11. Extracting fixed effects from the fitted model
+## Extracting fixed effects
 
 Function:
 
@@ -809,20 +886,54 @@ If `fit$parFixedDf` is unavailable, it tries:
 fit$parFixed
 ```
 
-The extracted fixed-effect vector can be written as:
+The extracted fixed-effect vector is denoted as:
 
 $$
 \hat{\boldsymbol{\theta}}
 $$
 
-where:
-
-- \(\hat{\boldsymbol{\theta}}\) is the vector of estimated population-level fixed effects.
-- Each component \(\hat{\theta}_k\) corresponds to one fixed-effect parameter.
+where each component `$\hat{\theta}_k$` is one estimated population-level parameter.
 
 ---
 
-## 12. Simulating random effects
+## Fixed effects and random effects used in the VPC
+
+The helper function extracts the estimated random-effect covariance matrix:
+
+$$
+\hat{\boldsymbol{\Omega}}
+$$
+
+from:
+
+```r
+fit$omega
+```
+
+For each simulation replicate, subject-specific random effects are sampled as:
+
+$$
+\boldsymbol{\eta}_i^{(s)}
+\sim
+\mathrm{Normal}(\mathbf{0}, \hat{\boldsymbol{\Omega}})
+$$
+
+where:
+
+- `$\boldsymbol{\eta}_i^{(s)}$` is the vector of random effects for subject `$i$` in simulation `$s$`.
+- `$\mathbf{0}$` is a vector of zeros.
+- `$\hat{\boldsymbol{\Omega}}$` is the estimated random-effect covariance matrix.
+- `$s = 1, \dots, S$`, where `$S$` is the number of simulations.
+
+Random effects are simulated using:
+
+```r
+MASS::mvrnorm()
+```
+
+---
+
+## Building simulation parameters
 
 Function:
 
@@ -834,66 +945,37 @@ Purpose:
 
 This helper builds a parameter dataset for simulation by combining:
 
-1. Fixed-effect estimates.
-2. Simulated subject-level random effects.
-
-The random effects are simulated from a multivariate normal distribution:
-
-$$
-\boldsymbol{\eta}_i \sim \mathcal{N}(\mathbf{0}, \hat{\boldsymbol{\Omega}})
-$$
-
-where:
-
-- \(\boldsymbol{\eta}_i\) is the vector of random effects for subject \(i\).
-- \(\mathbf{0}\) is a vector of zeros.
-- \(\hat{\boldsymbol{\Omega}}\) is the estimated random-effect covariance matrix from the fitted model.
-- \(i = 1, \dots, N\), where \(N\) is the number of subjects.
-
-In the code, the covariance matrix is taken from:
-
-```r
-fit$omega
-```
-
-and random effects are simulated using:
-
-```r
-MASS::mvrnorm()
-```
+- Fixed-effect estimates.
+- Simulated subject-level random effects.
 
 The resulting simulation parameter table contains one row per subject.
 
+Each row includes:
+
+- Subject ID.
+- Fixed-effect parameter values.
+- Simulated random-effect values.
+
+Although this helper exists in the script, the main VPC function also performs similar simulation-parameter construction internally for each replicate.
+
 ---
 
-# Main categorical VPC function
+## Categorical VPC
 
-## 13. `plot_categorical_vpc_nlmixr2()`
+The categorical VPC compares observed and model-simulated responder probabilities over time.
 
-Main function:
+The helper function used is:
 
 ```r
 plot_categorical_vpc_nlmixr2()
 ```
 
-Purpose:
-
-This function generates a categorical visual predictive check for a fitted binary `nlmixr2` model.
-
-It compares:
-
-- The empirical observed responder probability.
-- The model-predicted median simulated responder probability.
-- The simulated prediction interval.
-
----
-
-## 14. Function arguments
+A typical call is:
 
 ```r
 plot_categorical_vpc_nlmixr2(
-  fit,
-  data,
+  fit = fit,
+  data = modeling_data,
   id_col = "ID",
   time_col = "TIME",
   dv_col = "DV",
@@ -909,42 +991,33 @@ plot_categorical_vpc_nlmixr2(
 )
 ```
 
-| Argument | Meaning |
-|---|---|
-| `fit` | Fitted `nlmixr2` model object |
-| `data` | Dataset used for VPC simulation and empirical summaries |
-| `id_col` | Subject identifier column |
-| `time_col` | Time column |
-| `dv_col` | Binary dependent variable column |
-| `pred_var` | Model variable containing predicted probability |
-| `nBins` | Number of time bins |
-| `nSim` | Number of simulation replicates |
-| `ci` | Prediction interval level |
-| `seed` | Random seed for reproducibility |
-| `x_transform` | Function used to transform time for plotting |
-| `xlab` | X-axis label |
-| `ylab` | Y-axis label |
-| `title` | Plot title |
+The argument `pred_var` should identify the model variable containing the predicted probability of response.
+
+In this example, the predicted probability variable is:
+
+```r
+p1
+```
 
 ---
 
-## 15. Step-by-step VPC algorithm
+## Categorical VPC algorithm
 
-The function performs the following steps.
+### Step 1: Set the random seed
 
-### Step 1: Set random seed
+The function begins with:
 
 ```r
 set.seed(seed)
 ```
 
-This helps make simulation results reproducible.
+This helps make the simulation reproducible.
 
 ---
 
 ### Step 2: Check required columns
 
-The function verifies that the required columns exist in the input data:
+The function verifies that the input dataset contains:
 
 ```r
 id_col
@@ -952,7 +1025,15 @@ time_col
 dv_col
 ```
 
-If any are missing, the function stops with an error.
+For example:
+
+```r
+ID
+TIME
+DV
+```
+
+If any required columns are missing, the function stops with an error.
 
 ---
 
@@ -965,7 +1046,7 @@ ui <- rxode2::rxUiDecompress(fit)
 exprs <- ui$lstExpr
 ```
 
-The object `exprs` contains model expressions from the fitted object.
+The object `exprs` contains the model expressions from the fitted object.
 
 ---
 
@@ -990,7 +1071,7 @@ with numeric indicator variables such as:
 SEX_female
 ```
 
-This rewritten model is then suitable for simulation with `rxode2`.
+The rewritten model can then be evaluated by `rxode2`.
 
 ---
 
@@ -1013,7 +1094,7 @@ The prepared data contain:
 - Numeric subject IDs.
 - Time.
 - Binary observed response.
-- Any needed numeric categorical indicators.
+- Numeric categorical indicators needed by the model.
 
 The plotting time is calculated as:
 
@@ -1021,69 +1102,56 @@ The plotting time is calculated as:
 time_plot = x_transform(.time)
 ```
 
-For example, if the original time is in hours, then:
+If the original time is in hours and the desired plot scale is days, use:
 
 ```r
 x_transform = function(x) x / 24
 ```
 
-converts time to days.
+If the input time is already in days, use:
+
+```r
+x_transform = function(x) x
+```
 
 ---
 
-### Step 6: Build the solve dataset
+### Step 6: Bin time
 
-The function identifies which model parameters are present in the data:
-
-```r
-needed_from_data <- pred_model$params[pred_model$params %in% names(dat)]
-```
-
-Then it creates the event or covariate dataset for `rxSolve()`:
-
-```r
-solve_data <- dat %>%
-  dplyr::select(dplyr::all_of(unique(c("id", "time", "DV", needed_from_data))))
-```
-
-This ensures that the solver receives only the columns needed for prediction.
-
----
-
-### Step 7: Define time bins
-
-The transformed plotting time is divided into `nBins` bins:
-
-```r
-breaks <- seq(t_range_plot[1], t_range_plot[2], length.out = nBins + 1)
-```
-
-Each observation is assigned to a time bin:
-
-```r
-timeBin = cut(time_plot, breaks = breaks, include.lowest = TRUE)
-```
-
-Mathematically, let the time bins be:
+The transformed plotting time is divided into `$K$` bins:
 
 $$
 B_1, B_2, \dots, B_K
 $$
 
-where:
+where `$K$` is controlled by:
 
-- \(K =\) `nBins`.
-- Each \(B_k\) is an interval of transformed time.
-- Each observation belongs to one bin.
+```r
+nBins
+```
+
+For example:
+
+```r
+nBins = 10
+```
+
+creates 10 time bins.
+
+Each observation is assigned to a bin using:
+
+```r
+timeBin = cut(time_plot, breaks = breaks, include.lowest = TRUE)
+```
 
 ---
 
-### Step 8: Compute empirical responder probabilities
+### Step 7: Compute the observed responder proportion
 
-For each time bin \(B_k\), the empirical observed responder probability is:
+For each time bin `$B_k$`, the empirical observed responder proportion is:
 
 $$
-\hat{p}^{\text{obs}}_k =
+\hat{p}^{\mathrm{obs}}_k =
 \frac{1}{n_k}
 \sum_{(i,j): t_{ij} \in B_k}
 Y_{ij}
@@ -1091,10 +1159,13 @@ $$
 
 where:
 
-- \(\hat{p}^{\text{obs}}_k\) is the observed responder probability in bin \(k\).
-- \(n_k\) is the number of observed binary responses in bin \(k\).
-- \(Y_{ij}\) is the observed binary response for subject \(i\) at time \(j\).
-- \(t_{ij}\) is the observation time.
+- `$\hat{p}^{\mathrm{obs}}_k$` is the observed responder proportion in bin `$k$`.
+- `$n_k$` is the number of observations in bin `$k$`.
+- `$Y_{ij}$` is the observed binary response for subject `$i$` at observation `$j$`.
+- `$t_{ij}$` is the observation time.
+- `$B_k$` is time bin `$k$`.
+
+Because `DV` is coded as 0 or 1, the mean of `DV` within a bin is the responder proportion.
 
 In code:
 
@@ -1109,91 +1180,54 @@ emp_prob <- emp_dat %>%
 
 ---
 
-### Step 9: Simulate random effects
+### Step 8: Simulate replicate datasets
 
-For each simulation replicate \(s\), subject-level random effects are drawn:
+For each simulation replicate `$s$`, where:
+
+$$
+s = 1, \dots, S
+$$
+
+and `$S$` is the number of simulations, the function draws subject-level random effects:
 
 $$
 \boldsymbol{\eta}_i^{(s)}
 \sim
-\mathcal{N}(\mathbf{0}, \hat{\boldsymbol{\Omega}})
+\mathrm{Normal}(\mathbf{0}, \hat{\boldsymbol{\Omega}})
+$$
+
+Then the model computes predicted probabilities:
+
+$$
+p_{ij}^{(s)}
+=
+\mathrm{P}
+\left(
+Y_{ij}^{(s)} = 1
+\mid
+\hat{\boldsymbol{\theta}},
+\boldsymbol{\eta}_i^{(s)},
+\mathbf{x}_{ij}
+\right)
 $$
 
 where:
 
-- \(s = 1, \dots, S\).
-- \(S =\) `nSim`.
-- \(i = 1, \dots, N\).
-- \(N\) is the number of subjects.
-- \(\hat{\boldsymbol{\Omega}}\) is the estimated random-effect covariance matrix.
+- `$p_{ij}^{(s)}$` is the predicted response probability for subject `$i$` at observation `$j$` in simulation `$s$`.
+- `$\hat{\boldsymbol{\theta}}$` is the vector of estimated fixed effects.
+- `$\boldsymbol{\eta}_i^{(s)}$` is the simulated random-effect vector for subject `$i$`.
+- `$\mathbf{x}_{ij}$` is the covariate vector.
+- `$Y_{ij}^{(s)}$` is the simulated binary response.
 
-In code:
-
-```r
-eta_draw <- MASS::mvrnorm(
-  n = length(ids),
-  mu = rep(0, length(eta_names)),
-  Sigma = omega_mat
-)
-```
-
----
-
-### Step 10: Simulate model-predicted probabilities
-
-For each simulation replicate, `rxode2::rxSolve()` evaluates the fitted model using:
-
-- Fixed effects.
-- Simulated random effects.
-- Observed time points.
-- Observed covariate values.
-
-```r
-sim_solve <- rxode2::rxSolve(
-  pred_model,
-  params = sim_params,
-  events = solve_data %>%
-    dplyr::select(-DV),
-  returnType = "data.frame",
-  covsInterpolation = "locf",
-  omega = NULL,
-  addDosing = FALSE
-)
-```
-
-The output contains:
-
-```r
-rx_pred_
-```
-
-which is the predicted binary response probability.
-
-Mathematically, this is:
+Then simulated binary responses are drawn as:
 
 $$
-p_{ij}^{(s)} =
-P(Y_{ij}^{(s)} = 1 \mid \hat{\boldsymbol{\theta}}, \boldsymbol{\eta}_i^{(s)}, \mathbf{x}_{ij})
+Y_{ij}^{(s)}
+\sim
+\mathrm{Bernoulli}\left(p_{ij}^{(s)}\right)
 $$
 
-where:
-
-- \(p_{ij}^{(s)}\) is the predicted response probability for subject \(i\), time \(j\), simulation \(s\).
-- \(\hat{\boldsymbol{\theta}}\) is the vector of fixed-effect estimates.
-- \(\boldsymbol{\eta}_i^{(s)}\) is the simulated random-effect vector.
-- \(\mathbf{x}_{ij}\) is the covariate vector.
-
----
-
-### Step 11: Simulate binary outcomes
-
-For each predicted probability, a simulated binary outcome is drawn:
-
-$$
-Y_{ij}^{(s)} \sim \operatorname{Bernoulli}(p_{ij}^{(s)})
-$$
-
-In code:
+In the code, this is done with:
 
 ```r
 simDV = stats::rbinom(
@@ -1206,75 +1240,99 @@ simDV = stats::rbinom(
 The probability is clipped to avoid exact values of 0 or 1:
 
 $$
-p_{ij,\text{clipped}}^{(s)}
+p_{ij,\mathrm{clipped}}^{(s)}
 =
-\min\left(
-\max\left(p_{ij}^{(s)}, 10^{-10}\right),
+\min \left[
+\max \left(p_{ij}^{(s)}, 10^{-10}\right),
 1 - 10^{-10}
-\right)
+\right]
 $$
 
-This numerical safeguard prevents simulation issues when probabilities are extremely close to 0 or 1.
+This is a numerical safeguard.
 
 ---
 
-### Step 12: Compute simulated responder proportions
+### Step 9: Compute simulated responder proportions
 
-For each simulation replicate \(s\) and each time bin \(B_k\), the simulated responder proportion is:
+For each simulation replicate `$s$` and time bin `$B_k$`, the simulated responder proportion is:
 
 $$
 \hat{p}^{(s)}_k =
-\frac{1}{n_k^{(s)}}
+\frac{1}{n_k}
 \sum_{(i,j): t_{ij} \in B_k}
 Y_{ij}^{(s)}
 $$
 
 where:
 
-- \(\hat{p}^{(s)}_k\) is the simulated responder proportion in bin \(k\) for simulation \(s\).
-- \(Y_{ij}^{(s)}\) is the simulated binary response.
-- \(n_k^{(s)}\) is the number of simulated observations in bin \(k\).
+- `$\hat{p}^{(s)}_k$` is the simulated responder proportion in bin `$k$` for simulation `$s$`.
+- `$Y_{ij}^{(s)}$` is the simulated binary response.
+- `$n_k$` is the number of simulated observations in bin `$k$`.
 
-In code:
+After `$S$` simulations, each time bin has a distribution of simulated responder proportions:
 
-```r
-sim_df <- sim_df %>%
-  dplyr::group_by(timeBin) %>%
-  dplyr::summarise(
-    simProp = mean(simDV),
-    .groups = "drop"
-  )
-```
+$$
+\hat{p}^{(1)}_k,
+\hat{p}^{(2)}_k,
+\dots,
+\hat{p}^{(S)}_k
+$$
 
 ---
 
-### Step 13: Compute prediction intervals
+### Step 10: Compute the simulation-based prediction interval
 
-For each time bin, the function computes the lower, median, and upper quantiles of the simulated responder proportions.
+The shaded band in the categorical VPC is a simulation-based prediction interval for the binned responder proportion.
 
-If the requested prediction interval is:
-
-$$
-100 \times \text{ci}\%
-$$
-
-then:
+For a central `$100 \times \mathrm{ci}\%$` prediction interval:
 
 $$
-\alpha = \frac{1 - \text{ci}}{2}
+\alpha = \frac{1 - \mathrm{ci}}{2}
 $$
 
-The lower and upper prediction interval bounds are:
+The lower prediction interval bound is:
 
 $$
+\mathrm{PI}_{k,\mathrm{low}}
+=
 Q_{\alpha}
+\left(
+\hat{p}^{(1)}_k,
+\hat{p}^{(2)}_k,
+\dots,
+\hat{p}^{(S)}_k
+\right)
 $$
 
-and:
+The upper prediction interval bound is:
 
 $$
+\mathrm{PI}_{k,\mathrm{high}}
+=
 Q_{1-\alpha}
+\left(
+\hat{p}^{(1)}_k,
+\hat{p}^{(2)}_k,
+\dots,
+\hat{p}^{(S)}_k
+\right)
 $$
+
+The simulated median is:
+
+$$
+\mathrm{PI}_{k,\mathrm{median}}
+=
+Q_{0.5}
+\left(
+\hat{p}^{(1)}_k,
+\hat{p}^{(2)}_k,
+\dots,
+\hat{p}^{(S)}_k
+\right)
+$$
+
+where `$Q_q$` is the empirical quantile at probability `$q$`.
 
 For example, if:
 
@@ -1288,7 +1346,29 @@ $$
 \alpha = \frac{1 - 0.95}{2} = 0.025
 $$
 
-and the prediction interval is bounded by the 2.5th and 97.5th percentiles.
+and the prediction interval uses the 2.5th and 97.5th percentiles:
+
+$$
+\mathrm{PI}_{k,\mathrm{low}}
+=
+Q_{0.025}
+\left(
+\hat{p}^{(1)}_k,
+\dots,
+\hat{p}^{(S)}_k
+\right)
+$$
+
+$$
+\mathrm{PI}_{k,\mathrm{high}}
+=
+Q_{0.975}
+\left(
+\hat{p}^{(1)}_k,
+\dots,
+\hat{p}^{(S)}_k
+\right)
+$$
 
 In code:
 
@@ -1307,40 +1387,82 @@ pi_df <- sim_res %>%
 
 ---
 
-### Step 14: Create the VPC plot
+### Step 11: Create the VPC plot
 
 The final plot contains:
 
-- A shaded prediction interval.
+- A shaded prediction interval for the simulated binned responder proportions.
 - A solid line for the empirical observed responder probability.
 - A dashed line for the simulated median responder probability.
 
-The plot is created with `ggplot2`.
+The shaded interval can be described as:
 
-Interpretation:
+> A 95% simulation-based prediction interval for the binned responder proportion.
 
-- If the empirical line lies mostly inside the prediction interval, the model is broadly consistent with the observed binary response trend.
-- If the empirical line systematically lies outside the prediction interval, the model may be missing important structure.
-- If the predicted median is consistently above or below the empirical line, the model may overpredict or underpredict the response probability.
+This means that, under the fitted model, approximately 95% of simulated binned responder proportions are expected to fall within the shaded band.
+
+If the empirical observed responder probability lies mostly inside the prediction interval, the model is broadly consistent with the observed time trend.
+
+If the empirical line systematically lies outside the prediction interval, the model may be overpredicting, underpredicting, or missing important structure.
 
 ---
 
-# Categorical VPC interpretation
+## Code-to-statistics mapping for the categorical VPC
 
-The categorical VPC compares observed and simulated responder rates over time.
+This section maps the main code objects in `plot_categorical_vpc_nlmixr2()` to the statistical quantities used in the VPC.
 
-For each time bin \(B_k\), the plot shows:
+- `DV`: observed binary response.
+- `pred`: model-predicted response probability.
+- `simDV`: simulated binary response.
+- `timeBin`: time bin.
+- `empirical`: observed responder proportion.
+- `simProp`: simulated responder proportion.
+- `piLow`: lower prediction interval bound.
+- `piMed`: median simulated responder proportion.
+- `piHigh`: upper prediction interval bound.
+- `nSim`: number of simulated replicate datasets.
+- `nBins`: number of time bins.
+- `ci`: central prediction interval level.
+
+In notation:
+
+- `DV` corresponds to `$Y_{ij}$`.
+- `pred` corresponds to `$p_{ij}^{(s)}$`.
+- `simDV` corresponds to `$Y_{ij}^{(s)}$`.
+- `timeBin` corresponds to `$B_k$`.
+- `empirical` corresponds to `$\hat{p}^{\mathrm{obs}}_k$`.
+- `simProp` corresponds to `$\hat{p}^{(s)}_k$`.
+- `piLow` corresponds to `$\mathrm{PI}_{k,\mathrm{low}}$`.
+- `piMed` corresponds to `$\mathrm{PI}_{k,\mathrm{median}}$`.
+- `piHigh` corresponds to `$\mathrm{PI}_{k,\mathrm{high}}$`.
+- `nSim` corresponds to `$S$`.
+- `nBins` corresponds to `$K$`.
+
+The empirical observed responder proportion is calculated from the original data:
 
 $$
-\hat{p}^{\text{obs}}_k
+\hat{p}^{\mathrm{obs}}_k =
+\frac{1}{n_k}
+\sum_{(i,j): t_{ij} \in B_k}
+Y_{ij}
 $$
 
-as the empirical observed responder probability.
-
-It also shows:
+The simulated responder proportion is calculated separately for each simulation replicate:
 
 $$
-\operatorname{median}\left(
+\hat{p}^{(s)}_k =
+\frac{1}{n_k}
+\sum_{(i,j): t_{ij} \in B_k}
+Y_{ij}^{(s)}
+$$
+
+The prediction interval is then calculated from the empirical quantiles of the simulated proportions:
+
+$$
+\mathrm{PI}_{k,\mathrm{low}}
+=
+Q_{\alpha}
+\left(
 \hat{p}^{(1)}_k,
 \hat{p}^{(2)}_k,
 \dots,
@@ -1348,55 +1470,129 @@ $$
 \right)
 $$
 
-as the model-predicted median responder probability.
-
-The shaded region shows:
-
 $$
-\left[
-Q_{\alpha}
-\left(
-\hat{p}^{(1)}_k,
-\dots,
-\hat{p}^{(S)}_k
-\right),
+\mathrm{PI}_{k,\mathrm{high}}
+=
 Q_{1-\alpha}
 \left(
 \hat{p}^{(1)}_k,
+\hat{p}^{(2)}_k,
 \dots,
 \hat{p}^{(S)}_k
 \right)
-\right]
 $$
 
 where:
 
-- \(S\) is the number of simulations.
-- \(Q_{\alpha}\) is the lower quantile.
-- \(Q_{1-\alpha}\) is the upper quantile.
-- \(\alpha = (1 - \text{ci}) / 2\).
+$$
+\alpha = \frac{1 - \mathrm{ci}}{2}
+$$
 
 ---
 
-# Important assumptions
+## Prediction interval versus confidence interval
 
-The helper function assumes:
+The teaching session uses both confidence intervals and prediction intervals, but they answer different questions.
 
-1. The fitted model object contains fixed effects in `fit$parFixedDf` or `fit$parFixed`.
-2. The fitted model object contains a random-effect covariance matrix in `fit$omega`.
-3. The rows and columns of `fit$omega` are named.
-4. The model-predicted binary response probability is available as `pred_var`, defaulting to `p1`.
-5. The dependent variable is binary and coded as 0 or 1.
-6. Any categorical string comparisons in the model are present as columns in the input data.
-7. The same covariate names used in the model are available in the data passed to `plot_categorical_vpc_nlmixr2()`.
+### Confidence interval
+
+A confidence interval describes uncertainty about an unknown parameter.
+
+For example, for `$r$` responders out of `$n$` observations, the observed responder proportion is:
+
+$$
+\hat{p} = \frac{r}{n}
+$$
+
+An exact binomial confidence interval gives a plausible range for the true underlying response probability.
+
+It answers:
+
+> Given the observed data, what is a plausible range for the true responder probability?
+
+### Prediction interval
+
+The categorical VPC prediction interval describes variability in replicated data simulated under the fitted model.
+
+It answers:
+
+> If the fitted model generated many new datasets with the same design, what range of binned responder proportions would we expect?
+
+Therefore, the VPC shaded band should be described as a prediction interval, not as a confidence interval.
+
+The current implementation treats the fitted fixed effects as fixed at their estimates and simulates random effects and binary outcomes.
+
+It does not fully propagate fixed-effect parameter uncertainty.
 
 ---
 
-# Common integration errors and fixes
+## What the categorical VPC does and does not show
 
-## Missing categorical variable
+The categorical VPC is a model evaluation plot.
 
-Error example:
+It shows whether the fitted model can reproduce the observed responder-rate trend over time.
+
+The VPC shows:
+
+- The observed responder proportion in each time bin.
+- The median responder proportion from simulated replicate datasets.
+- The expected simulation variability in responder proportions.
+
+The VPC does not directly show:
+
+- Individual-level prediction errors.
+- A formal hypothesis test.
+- A confidence interval for the observed responder proportion.
+- Full fixed-effect parameter uncertainty, unless this is explicitly added to the simulation procedure.
+
+In the current implementation, the fixed-effect estimates are treated as fixed at:
+
+$$
+\hat{\boldsymbol{\theta}}
+$$
+
+and random effects are sampled from:
+
+$$
+\boldsymbol{\eta}_i^{(s)}
+\sim
+\mathrm{Normal}(\mathbf{0}, \hat{\boldsymbol{\Omega}})
+$$
+
+Therefore, the VPC prediction interval includes variability from:
+
+- Simulated subject-level random effects.
+- Simulated binary response outcomes.
+- The study design and observation schedule.
+- The binning procedure.
+
+It does not fully propagate uncertainty in the estimated fixed effects or the estimated random-effect covariance matrix.
+
+---
+
+## How to describe the VPC result
+
+Recommended wording:
+
+> The shaded region is a 95% simulation-based prediction interval for the binned responder proportion. It was obtained by simulating replicate datasets from the fitted model, computing responder proportions in each time bin, and taking the 2.5th and 97.5th percentiles of those simulated proportions.
+
+Short wording:
+
+> The shaded band is the 95% VPC prediction interval for the simulated responder rate.
+
+Avoid saying:
+
+> The shaded band is the 95% confidence interval of the observed responder rate.
+
+That wording is not correct for this plot because the shaded band describes simulated replicated data, not uncertainty around the observed responder proportion.
+
+---
+
+## Common integration errors and fixes
+
+### Missing categorical variable
+
+Example error:
 
 ```text
 Required categorical variable missing from data
@@ -1414,7 +1610,7 @@ but the column `SEX` is not present in the dataset passed to the VPC function.
 
 Fix:
 
-Make sure the data contains the original categorical column:
+Check that the data contains the original categorical column:
 
 ```r
 names(modeling_data)
@@ -1422,9 +1618,9 @@ names(modeling_data)
 
 ---
 
-## Missing omega row names
+### Missing omega row names
 
-Error example:
+Example error:
 
 ```text
 Omega matrix row names are required
@@ -1446,7 +1642,7 @@ The row names should correspond to the random-effect names used by the model.
 
 ---
 
-## Predicted probability variable not found
+### Predicted probability variable not found
 
 Cause:
 
@@ -1467,7 +1663,7 @@ plot_categorical_vpc_nlmixr2(
 For example, if the model uses:
 
 ```r
-p_resp <- expit(logit_p_resp)
+p_resp <- 1 / (1 + exp(-logit_p_resp))
 ```
 
 then use:
@@ -1478,11 +1674,11 @@ pred_var = "p_resp"
 
 ---
 
-## Time scale is wrong
+### Time scale is wrong
 
 Cause:
 
-The input `TIME` may be in hours, but the desired plot is in days.
+The input `TIME` may be in hours, but the desired plot scale may be days.
 
 Fix:
 
@@ -1500,7 +1696,7 @@ x_transform = function(x) x
 
 ---
 
-# Reproducibility
+## Reproducibility
 
 The analysis uses a fixed random seed:
 
@@ -1518,13 +1714,13 @@ This helps make the output reproducible across runs, although small differences 
 
 ---
 
-# Suggested citation or acknowledgement
+## Suggested citation or acknowledgement
 
 This teaching material uses the `mad` example dataset from the `xgxr` R package and demonstrates modeling workflows using `nlmixr2` and `rxode2`.
 
 ---
 
-# License
+## License
 
 ```text
 MIT License
