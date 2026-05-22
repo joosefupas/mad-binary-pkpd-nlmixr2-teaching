@@ -1147,9 +1147,7 @@ simDV = stats::rbinom(
   prob = pmin(pmax(pred, 1e-10), 1 - 1e-10)
 )
 ```
-Replace that whole section with this GitHub-safe version:
 
-```markdown
 The probability is clipped to avoid exact values of 0 or 1:
 
 $$
