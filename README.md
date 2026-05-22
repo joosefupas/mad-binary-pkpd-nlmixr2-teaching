@@ -571,8 +571,7 @@ $$
 is replaced by:
 
 $$
-I_{i,\ell} =
-\mathbf{1}\left\{N(X_i) = N(\ell)\right\}
+I_{i,\ell} = \mathbf{1}\{N(X_i) = N(\ell)\}
 $$
 
 where:
@@ -764,8 +763,7 @@ SEX_female
 defined as:
 
 $$
-\mathrm{SEX\_female}_{ij} =
-\mathbf{1}\left\{N(\mathrm{SEX}_{ij}) = N(\mathrm{Female})\right\}
+\mathrm{SEX\_female}_{ij} = \mathbf{1}\{N(\mathrm{SEX}_{ij}) = N(\mathrm{Female})\}
 $$
 
 where:
@@ -1123,16 +1121,7 @@ $$
 Then the model computes predicted probabilities:
 
 $$
-p_{ij}^{(s)}
-=
-\mathrm{P}
-\left(
-Y_{ij}^{(s)} = 1
-\mid
-\hat{\boldsymbol{\theta}},
-\boldsymbol{\eta}_i^{(s)},
-\mathbf{x}_{ij}
-\right)
+p_{ij}^{(s)} = \mathrm{P}(Y_{ij}^{(s)} = 1 \mid \hat{\boldsymbol{\theta}}, \boldsymbol{\eta}_i^{(s)}, \mathbf{x}_{ij})
 $$
 
 where:
@@ -1146,9 +1135,7 @@ where:
 Then simulated binary responses are drawn as:
 
 $$
-Y_{ij}^{(s)}
-\sim
-\mathrm{Bernoulli}\left(p_{ij}^{(s)}\right)
+Y_{ij}^{(s)} \sim \mathrm{Bernoulli}(p_{ij}^{(s)})
 $$
 
 In the code, this is done with:
@@ -1160,16 +1147,13 @@ simDV = stats::rbinom(
   prob = pmin(pmax(pred, 1e-10), 1 - 1e-10)
 )
 ```
+Replace that whole section with this GitHub-safe version:
 
+```markdown
 The probability is clipped to avoid exact values of 0 or 1:
 
 $$
-p_{ij,\mathrm{clipped}}^{(s)}
-=
-\min \left[
-\max \left(p_{ij}^{(s)}, 10^{-10}\right),
-1 - 10^{-10}
-\right]
+p_{ij,clipped}^{(s)} = \min(\max(p_{ij}^{(s)}, 10^{-10}), 1 - 10^{-10})
 $$
 
 This is a numerical safeguard.
@@ -1178,28 +1162,22 @@ This is a numerical safeguard.
 
 ### Step 9: Compute simulated responder proportions
 
-For each simulation replicate $s$ and time bin $B_k$, the simulated responder proportion is:
+For each simulation replicate `$s$` and time bin `$B_k$`, the simulated responder proportion is:
 
 $$
-\hat{p}^{(s)}_k =
-\frac{1}{n_k}
-\sum_{(i,j): t_{ij} \in B_k}
-Y_{ij}^{(s)}
+\hat{p}_k^{(s)} = \frac{1}{n_k}\sum_{(i,j): t_{ij} \in B_k} Y_{ij}^{(s)}
 $$
 
 where:
 
-- $\hat{p}^{(s)}_k$ is the simulated responder proportion in bin $k$ for simulation $s$.
-- $Y_{ij}^{(s)}$ is the simulated binary response.
-- $n_k$ is the number of simulated observations in bin $k$.
+- `$\hat{p}_k^{(s)}$` is the simulated responder proportion in bin `$k$` for simulation `$s$`.
+- `$Y_{ij}^{(s)}$` is the simulated binary response.
+- `$n_k$` is the number of simulated observations in bin `$k$`.
 
-After $S$ simulations, each time bin has a distribution of simulated responder proportions:
+After `$S$` simulations, each time bin has a distribution of simulated responder proportions:
 
 $$
-\hat{p}^{(1)}_k,
-\hat{p}^{(2)}_k,
-\dots,
-\hat{p}^{(S)}_k
+\hat{p}_k^{(1)}, \hat{p}_k^{(2)}, \dots, \hat{p}_k^{(S)}
 $$
 
 ---
@@ -1208,55 +1186,31 @@ $$
 
 The shaded band in the categorical VPC is a simulation-based prediction interval for the binned responder proportion.
 
-For a central $100 \times \mathrm{ci}\%$ prediction interval:
+For a central `$100 \times ci\%$` prediction interval:
 
 $$
-\alpha = \frac{1 - \mathrm{ci}}{2}
+\alpha = \frac{1 - ci}{2}
 $$
 
 The lower prediction interval bound is:
 
 $$
-\mathrm{PI}_{k,\mathrm{low}}
-=
-Q_{\alpha}
-\left(
-\hat{p}^{(1)}_k,
-\hat{p}^{(2)}_k,
-\dots,
-\hat{p}^{(S)}_k
-\right)
+PI_{k,low} = Q_{\alpha}(\hat{p}_k^{(1)}, \hat{p}_k^{(2)}, \dots, \hat{p}_k^{(S)})
 $$
 
 The upper prediction interval bound is:
 
 $$
-\mathrm{PI}_{k,\mathrm{high}}
-=
-Q_{1-\alpha}
-\left(
-\hat{p}^{(1)}_k,
-\hat{p}^{(2)}_k,
-\dots,
-\hat{p}^{(S)}_k
-\right)
+PI_{k,high} = Q_{1-\alpha}(\hat{p}_k^{(1)}, \hat{p}_k^{(2)}, \dots, \hat{p}_k^{(S)})
 $$
 
 The simulated median is:
 
 $$
-\mathrm{PI}_{k,\mathrm{median}}
-=
-Q_{0.5}
-\left(
-\hat{p}^{(1)}_k,
-\hat{p}^{(2)}_k,
-\dots,
-\hat{p}^{(S)}_k
-\right)
+PI_{k,median} = Q_{0.5}(\hat{p}_k^{(1)}, \hat{p}_k^{(2)}, \dots, \hat{p}_k^{(S)})
 $$
 
-where $Q_q$ is the empirical quantile at probability $q$.
+where `$Q_q$` is the empirical quantile at probability `$q$`.
 
 For example, if:
 
@@ -1273,25 +1227,11 @@ $$
 and the prediction interval uses the 2.5th and 97.5th percentiles:
 
 $$
-\mathrm{PI}_{k,\mathrm{low}}
-=
-Q_{0.025}
-\left(
-\hat{p}^{(1)}_k,
-\dots,
-\hat{p}^{(S)}_k
-\right)
+PI_{k,low} = Q_{0.025}(\hat{p}_k^{(1)}, \dots, \hat{p}_k^{(S)})
 $$
 
 $$
-\mathrm{PI}_{k,\mathrm{high}}
-=
-Q_{0.975}
-\left(
-\hat{p}^{(1)}_k,
-\dots,
-\hat{p}^{(S)}_k
-\right)
+PI_{k,high} = Q_{0.975}(\hat{p}_k^{(1)}, \dots, \hat{p}_k^{(S)})
 $$
 
 In code:
@@ -1509,132 +1449,6 @@ Avoid saying:
 > The shaded band is the 95% confidence interval of the observed responder rate.
 
 That wording is not correct for this plot because the shaded band describes simulated replicated data, not uncertainty around the observed responder proportion.
-
----
-
-## Common integration errors and fixes
-
-### Missing categorical variable
-
-Example error:
-
-```text
-Required categorical variable missing from data
-```
-
-Cause:
-
-The model contains a comparison such as:
-
-```r
-SEX == "Female"
-```
-
-but the column `SEX` is not present in the dataset passed to the VPC function.
-
-Fix:
-
-Check that the data contains the original categorical column:
-
-```r
-names(modeling_data)
-```
-
----
-
-### Missing omega row names
-
-Example error:
-
-```text
-Omega matrix row names are required
-```
-
-Cause:
-
-The random-effect covariance matrix does not have row names.
-
-Fix:
-
-Check:
-
-```r
-fit$omega
-```
-
-The row names should correspond to the random-effect names used by the model.
-
----
-
-### Predicted probability variable not found
-
-Cause:
-
-The model-predicted probability may not be named `p1`.
-
-Fix:
-
-Pass the correct prediction variable name:
-
-```r
-plot_categorical_vpc_nlmixr2(
-  fit = fit,
-  data = modeling_data,
-  pred_var = "your_probability_variable"
-)
-```
-
-For example, if the model uses:
-
-```r
-p_resp <- 1 / (1 + exp(-logit_p_resp))
-```
-
-then use:
-
-```r
-pred_var = "p_resp"
-```
-
----
-
-### Time scale is wrong
-
-Cause:
-
-The input `TIME` may be in hours, but the desired plot scale may be days.
-
-Fix:
-
-Use:
-
-```r
-x_transform = function(x) x / 24
-```
-
-If the input time is already in days, use:
-
-```r
-x_transform = function(x) x
-```
-
----
-
-## Reproducibility
-
-The analysis uses a fixed random seed:
-
-```r
-set.seed(12345)
-```
-
-The same seed is also used in the categorical VPC simulation:
-
-```r
-seed = 12345
-```
-
-This helps make the output reproducible across runs, although small differences may still occur across package versions or operating systems.
 
 ---
 
