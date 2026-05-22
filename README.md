@@ -12,9 +12,9 @@ $$
 
 for a responder, or
 
-\[
+$$
 Y = 0
-\]
+$$
 
 for a non-responder.
 
@@ -327,9 +327,9 @@ PD_CMT <- 6
 
 The binary endpoint is represented mathematically as:
 
-\[
+$$
 Y_{ij} \in \{0, 1\}
-\]
+$$
 
 where:
 
@@ -351,9 +351,9 @@ summarise_binom()
 
 For a group with \(n\) binary observations and \(r\) responders, the empirical responder proportion is:
 
-\[
+$$
 \hat{p} = \frac{r}{n}
-\]
+$$
 
 where:
 
@@ -405,15 +405,15 @@ The categorical model describes the probability of binary response using a logit
 
 The binary outcome is modeled as:
 
-\[
+$$
 Y_{ij} \sim \operatorname{Bernoulli}(p_{ij})
-\]
+$$
 
 or equivalently:
 
-\[
+$$
 Y_{ij} \sim \operatorname{Binomial}(1, p_{ij})
-\]
+$$
 
 where:
 
@@ -423,27 +423,27 @@ where:
 
 The logit transformation is:
 
-\[
+$$
 \operatorname{logit}(p_{ij}) = \log \left( \frac{p_{ij}}{1 - p_{ij}} \right)
-\]
+$$
 
 The inverse-logit transformation is:
 
-\[
+$$
 p_{ij} = \frac{\exp(\eta_{ij})}{1 + \exp(\eta_{ij})}
-\]
+$$
 
 or equivalently:
 
-\[
+$$
 p_{ij} = \frac{1}{1 + \exp(-\eta_{ij})}
-\]
+$$
 
 where \(\eta_{ij}\) is the linear predictor.
 
 The general form of the model is:
 
-\[
+$$
 \operatorname{logit}(p_{ij}) =
 \beta_0
 + \beta_{\text{trt}} \cdot \text{TRT}_i
@@ -451,7 +451,7 @@ The general form of the model is:
 + \beta_{\text{sex}} \cdot \text{SEX}_i
 + \beta_{\text{time}} \cdot t_{ij}
 + b_i
-\]
+$$
 
 where:
 
@@ -528,9 +528,9 @@ high_dose_group
 
 The transformation can be written as a normalization function:
 
-\[
+$$
 N(x)
-\]
+$$
 
 where \(x\) is an original category label and \(N(x)\) is the normalized label.
 
@@ -594,15 +594,15 @@ It extracts four pieces of information:
 
 Mathematically, a string comparison such as:
 
-\[
+$$
 X_i = \ell
-\]
+$$
 
 is replaced by an indicator variable:
 
-\[
+$$
 I_{i,\ell} = \mathbf{1}\{N(X_i) = N(\ell)\}
-\]
+$$
 
 where:
 
@@ -627,10 +627,10 @@ SEX_female
 
 where:
 
-\[
+$$
 \text{SEX\_female}_i =
 \mathbf{1}\{N(\text{SEX}_i) = N(\text{Female})\}
-\]
+$$
 
 ---
 
@@ -761,11 +761,11 @@ SEX_female
 
 defined as:
 
-\[
+$$
 \text{SEX\_female}_{ij}
 =
 \mathbf{1}\{N(\text{SEX}_{ij}) = N(\text{Female})\}
-\]
+$$
 
 where:
 
@@ -811,9 +811,9 @@ fit$parFixed
 
 The extracted fixed-effect vector can be written as:
 
-\[
+$$
 \hat{\boldsymbol{\theta}}
-\]
+$$
 
 where:
 
@@ -839,9 +839,9 @@ This helper builds a parameter dataset for simulation by combining:
 
 The random effects are simulated from a multivariate normal distribution:
 
-\[
+$$
 \boldsymbol{\eta}_i \sim \mathcal{N}(\mathbf{0}, \hat{\boldsymbol{\Omega}})
-\]
+$$
 
 where:
 
@@ -1066,9 +1066,9 @@ timeBin = cut(time_plot, breaks = breaks, include.lowest = TRUE)
 
 Mathematically, let the time bins be:
 
-\[
+$$
 B_1, B_2, \dots, B_K
-\]
+$$
 
 where:
 
@@ -1082,12 +1082,12 @@ where:
 
 For each time bin \(B_k\), the empirical observed responder probability is:
 
-\[
+$$
 \hat{p}^{\text{obs}}_k =
 \frac{1}{n_k}
 \sum_{(i,j): t_{ij} \in B_k}
 Y_{ij}
-\]
+$$
 
 where:
 
@@ -1113,11 +1113,11 @@ emp_prob <- emp_dat %>%
 
 For each simulation replicate \(s\), subject-level random effects are drawn:
 
-\[
+$$
 \boldsymbol{\eta}_i^{(s)}
 \sim
 \mathcal{N}(\mathbf{0}, \hat{\boldsymbol{\Omega}})
-\]
+$$
 
 where:
 
@@ -1171,10 +1171,10 @@ which is the predicted binary response probability.
 
 Mathematically, this is:
 
-\[
+$$
 p_{ij}^{(s)} =
 P(Y_{ij}^{(s)} = 1 \mid \hat{\boldsymbol{\theta}}, \boldsymbol{\eta}_i^{(s)}, \mathbf{x}_{ij})
-\]
+$$
 
 where:
 
@@ -1189,9 +1189,9 @@ where:
 
 For each predicted probability, a simulated binary outcome is drawn:
 
-\[
+$$
 Y_{ij}^{(s)} \sim \operatorname{Bernoulli}(p_{ij}^{(s)})
-\]
+$$
 
 In code:
 
@@ -1205,14 +1205,14 @@ simDV = stats::rbinom(
 
 The probability is clipped to avoid exact values of 0 or 1:
 
-\[
+$$
 p_{ij,\text{clipped}}^{(s)}
 =
 \min\left(
 \max\left(p_{ij}^{(s)}, 10^{-10}\right),
 1 - 10^{-10}
 \right)
-\]
+$$
 
 This numerical safeguard prevents simulation issues when probabilities are extremely close to 0 or 1.
 
@@ -1222,12 +1222,12 @@ This numerical safeguard prevents simulation issues when probabilities are extre
 
 For each simulation replicate \(s\) and each time bin \(B_k\), the simulated responder proportion is:
 
-\[
+$$
 \hat{p}^{(s)}_k =
 \frac{1}{n_k^{(s)}}
 \sum_{(i,j): t_{ij} \in B_k}
 Y_{ij}^{(s)}
-\]
+$$
 
 where:
 
@@ -1254,27 +1254,27 @@ For each time bin, the function computes the lower, median, and upper quantiles 
 
 If the requested prediction interval is:
 
-\[
+$$
 100 \times \text{ci}\%
-\]
+$$
 
 then:
 
-\[
+$$
 \alpha = \frac{1 - \text{ci}}{2}
-\]
+$$
 
 The lower and upper prediction interval bounds are:
 
-\[
+$$
 Q_{\alpha}
-\]
+$$
 
 and:
 
-\[
+$$
 Q_{1-\alpha}
-\]
+$$
 
 For example, if:
 
@@ -1284,9 +1284,9 @@ ci = 0.95
 
 then:
 
-\[
+$$
 \alpha = \frac{1 - 0.95}{2} = 0.025
-\]
+$$
 
 and the prediction interval is bounded by the 2.5th and 97.5th percentiles.
 
@@ -1331,28 +1331,28 @@ The categorical VPC compares observed and simulated responder rates over time.
 
 For each time bin \(B_k\), the plot shows:
 
-\[
+$$
 \hat{p}^{\text{obs}}_k
-\]
+$$
 
 as the empirical observed responder probability.
 
 It also shows:
 
-\[
+$$
 \operatorname{median}\left(
 \hat{p}^{(1)}_k,
 \hat{p}^{(2)}_k,
 \dots,
 \hat{p}^{(S)}_k
 \right)
-\]
+$$
 
 as the model-predicted median responder probability.
 
 The shaded region shows:
 
-\[
+$$
 \left[
 Q_{\alpha}
 \left(
@@ -1367,7 +1367,7 @@ Q_{1-\alpha}
 \hat{p}^{(S)}_k
 \right)
 \right]
-\]
+$$
 
 where:
 
