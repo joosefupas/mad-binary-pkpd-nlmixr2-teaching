@@ -552,7 +552,7 @@ SEX_female
 Mathematically, this categorical comparison is converted into an indicator variable:
 
 $$
-\mathrm{SEX\_female}_i = \mathbf{1}\left\{N(\mathrm{SEX}_i) = N(\mathrm{Female})\right\}
+\mathrm{SEX\_female}_i = \mathbf{1}\{N(\mathrm{SEX}_i) = N(\mathrm{Female})\}
 $$
 
 where:
