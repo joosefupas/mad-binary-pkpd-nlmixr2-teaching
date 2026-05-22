@@ -6,9 +6,9 @@ The session focuses on exploratory analysis, binary pharmacodynamic response sum
 
 The main modeling endpoint is a binary pharmacodynamic response, where each observation is either:
 
-\[
+$$
 Y = 1
-\]
+$$
 
 for a responder, or
 
