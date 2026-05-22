@@ -79,37 +79,6 @@ This function:
 
 ---
 
-## Notes on mathematical notation
-
-This README uses GitHub-compatible dollar-sign math notation.
-
-Inline expressions are written as `$Y = 1$`.
-
-Display equations are written as:
-
-```text
-$$
-Y = 1
-$$
-```
-
-To improve GitHub rendering compatibility, this README avoids LaTeX commands that may not be supported by GitHub Markdown, such as `\operatorname`.
-
-Distribution names and function names are written using `\mathrm`.
-
-For example:
-
-$$
-Y_{ij} \sim \mathrm{Bernoulli}(p_{ij})
-$$
-
-Variable names that contain underscores are escaped inside math mode. For example, the indicator variable `SEX_female` is written as:
-
-$$
-\mathrm{SEX\_female}_i
-$$
-
----
 
 ## Dataset
 
@@ -216,22 +185,6 @@ To run the full teaching session, students should have:
 
 ---
 
-## How to render the teaching document
-
-From RStudio:
-
-1. Open `mad_binary_pd_teaching_session.qmd`.
-2. Click **Render**.
-3. The HTML teaching document will be generated.
-
-From the terminal:
-
-```bash
-quarto render mad_binary_pd_teaching_session.qmd
-```
-
----
-
 ## Exact integration point for `vpc_from_nlmixr2_fit.R`
 
 The helper file should be placed in the same directory as:
@@ -293,30 +246,6 @@ The argument `data` should be the analysis dataset used for model-based predicti
 
 ---
 
-## Recommended workflow for students
-
-Students should work through the Quarto document section by section:
-
-1. Load packages.
-2. Source `vpc_from_nlmixr2_fit.R`.
-3. Define constants.
-4. Load the dataset.
-5. Inspect the dataset.
-6. Prepare binary PD data.
-7. Create helper functions for summaries and plots.
-8. Generate exploratory plots.
-9. Examine dose-response relationships.
-10. Explore exposure-response relationships.
-11. Summarise longitudinal responder rates.
-12. Inspect study design summaries.
-13. Prepare modeling data.
-14. Inspect the `nlmixr2` model.
-15. Load the fitted model object.
-16. Generate the categorical VPC.
-17. Discuss model interpretation and limitations.
-
----
-
 ## Main analysis steps
 
 ### 1. Data preparation
@@ -347,7 +276,7 @@ where:
 PD_CMT <- 6
 ```
 
-The binary response for subject `$i$` at observation `$j$` is represented as:
+The binary response for subject $i$ at observation $j$ is represented as:
 
 $$
 Y_{ij} \in \{0, 1\}
@@ -355,8 +284,8 @@ $$
 
 where:
 
-- `$Y_{ij} = 1$` means subject `$i$` is a responder at observation `$j$`.
-- `$Y_{ij} = 0$` means subject `$i$` is a non-responder at observation `$j$`.
+- $Y_{ij} = 1$ means subject $i$ is a responder at observation $j$.
+- $Y_{ij} = 0$ means subject $i$ is a non-responder at observation $j$.
 
 ### 3. Binomial responder summaries
 
@@ -368,7 +297,7 @@ The key helper function is:
 summarise_binom()
 ```
 
-For a group with `$n$` binary observations and `$r$` responders, the empirical responder proportion is:
+For a group with $n$ binary observations and $r$ responders, the empirical responder proportion is:
 
 $$
 \hat{p} = \frac{r}{n}
@@ -376,9 +305,9 @@ $$
 
 where:
 
-- `$n$` is the number of non-missing binary observations.
-- `$r = \sum_{i=1}^{n} Y_i$` is the number of responders.
-- `$\hat{p}$` is the observed responder proportion.
+- $n$ is the number of non-missing binary observations.
+- $r = \sum_{i=1}^{n} Y_i$ is the number of responders.
+- $\hat{p}$ is the observed responder proportion.
 
 The function returns:
 
@@ -440,7 +369,7 @@ The fitted model is then used to generate a categorical VPC.
 
 The categorical model describes the probability of binary response using a logit relationship.
 
-For subject `$i$` at observation `$j$`, the binary response is:
+For subject $i$ at observation $j$, the binary response is:
 
 $$
 Y_{ij} \in \{0, 1\}
@@ -448,8 +377,8 @@ $$
 
 where:
 
-- `$Y_{ij} = 1$` means subject `$i$` is a responder at observation `$j$`.
-- `$Y_{ij} = 0$` means subject `$i$` is a non-responder at observation `$j$`.
+- $Y_{ij} = 1$ means subject $i$ is a responder at observation $j$.
+- $Y_{ij} = 0$ means subject $i$ is a non-responder at observation $j$.
 
 The model-predicted probability of response is:
 
@@ -483,7 +412,7 @@ p_{ij} =
 \frac{1}{1 + \exp(-\eta_{ij})}
 $$
 
-where `$\eta_{ij}$` is the linear predictor.
+where $\eta_{ij}$ is the linear predictor.
 
 A general binary response model can be written as:
 
@@ -499,13 +428,13 @@ $$
 
 where:
 
-- `$\beta_0$` is the baseline intercept.
-- `$\beta_{\mathrm{trt}}$` is a treatment effect.
-- `$\beta_{\mathrm{wt}}$` is a body weight effect.
-- `$\beta_{\mathrm{sex}}$` is a sex effect.
-- `$\beta_{\mathrm{time}}$` is a time effect.
-- `$t_{ij}$` is the observation time for subject `$i$` at observation `$j$`.
-- `$b_i$` is a subject-specific random effect.
+- $\beta_0$ is the baseline intercept.
+- $\beta_{\mathrm{trt}}$ is a treatment effect.
+- $\beta_{\mathrm{wt}}$ is a body weight effect.
+- $\beta_{\mathrm{sex}}$ is a sex effect.
+- $\beta_{\mathrm{time}}$ is a time effect.
+- $t_{ij}$ is the observation time for subject $i$ at observation $j$.
+- $b_i$ is a subject-specific random effect.
 
 The exact model structure depends on the `nlmixr2` model used in the teaching script.
 
@@ -578,8 +507,8 @@ $$
 
 where:
 
-- `$x$` is the original category label.
-- `$N(x)$` is the normalized label.
+- $x$ is the original category label.
+- $N(x)$ is the normalized label.
 
 The normalization steps are:
 
@@ -633,10 +562,10 @@ $$
 
 where:
 
-- `$N(\cdot)$` is the label-normalization function.
-- `$\mathbf{1}\{\cdot\}$` is an indicator function.
-- `$\mathrm{SEX\_female}_i = 1$` if subject or record `$i$` has normalized sex label `"female"`.
-- `$\mathrm{SEX\_female}_i = 0$` otherwise.
+- $N(\cdot)$ is the label-normalization function.
+- $\mathbf{1}\{\cdot\}$ is an indicator function.
+- $\mathrm{SEX\_female}_i = 1$ if subject or record $i$ has normalized sex label `"female"`.
+- $\mathrm{SEX\_female}_i = 0$ otherwise.
 
 More generally, a categorical comparison:
 
@@ -653,9 +582,9 @@ $$
 
 where:
 
-- `$X_i$` is the observed categorical value for subject or record `$i$`.
-- `$\ell$` is the category label used in the model.
-- `$I_{i,\ell}$` is the numeric indicator variable.
+- $X_i$ is the observed categorical value for subject or record $i$.
+- $\ell$ is the category label used in the model.
+- $I_{i,\ell}$ is the numeric indicator variable.
 
 ---
 
@@ -846,9 +775,9 @@ $$
 
 where:
 
-- `$i$` indexes subjects.
-- `$j$` indexes records or observations.
-- `$N(\cdot)$` is the normalization function.
+- $i$ indexes subjects.
+- $j$ indexes records or observations.
+- $N(\cdot)$ is the normalization function.
 
 Missing indicator values are set to zero.
 
@@ -892,7 +821,7 @@ $$
 \hat{\boldsymbol{\theta}}
 $$
 
-where each component `$\hat{\theta}_k$` is one estimated population-level parameter.
+where each component $\hat{\theta}_k$ is one estimated population-level parameter.
 
 ---
 
@@ -920,10 +849,10 @@ $$
 
 where:
 
-- `$\boldsymbol{\eta}_i^{(s)}$` is the vector of random effects for subject `$i$` in simulation `$s$`.
-- `$\mathbf{0}$` is a vector of zeros.
-- `$\hat{\boldsymbol{\Omega}}$` is the estimated random-effect covariance matrix.
-- `$s = 1, \dots, S$`, where `$S$` is the number of simulations.
+- $\boldsymbol{\eta}_i^{(s)}$ is the vector of random effects for subject $i$ in simulation $s$.
+- $\mathbf{0}$ is a vector of zeros.
+- $\hat{\boldsymbol{\Omega}}$ is the estimated random-effect covariance matrix.
+- $s = 1, \dots, S$, where $S$ is the number of simulations.
 
 Random effects are simulated using:
 
@@ -1118,13 +1047,13 @@ x_transform = function(x) x
 
 ### Step 6: Bin time
 
-The transformed plotting time is divided into `$K$` bins:
+The transformed plotting time is divided into $K$ bins:
 
 $$
 B_1, B_2, \dots, B_K
 $$
 
-where `$K$` is controlled by:
+where $K$ is controlled by:
 
 ```r
 nBins
@@ -1148,7 +1077,7 @@ timeBin = cut(time_plot, breaks = breaks, include.lowest = TRUE)
 
 ### Step 7: Compute the observed responder proportion
 
-For each time bin `$B_k$`, the empirical observed responder proportion is:
+For each time bin $B_k$, the empirical observed responder proportion is:
 
 $$
 \hat{p}^{\mathrm{obs}}_k =
@@ -1159,11 +1088,11 @@ $$
 
 where:
 
-- `$\hat{p}^{\mathrm{obs}}_k$` is the observed responder proportion in bin `$k$`.
-- `$n_k$` is the number of observations in bin `$k$`.
-- `$Y_{ij}$` is the observed binary response for subject `$i$` at observation `$j$`.
-- `$t_{ij}$` is the observation time.
-- `$B_k$` is time bin `$k$`.
+- $\hat{p}^{\mathrm{obs}}_k$ is the observed responder proportion in bin $k$.
+- $n_k$ is the number of observations in bin $k$.
+- $Y_{ij}$ is the observed binary response for subject $i$ at observation $j$.
+- $t_{ij}$ is the observation time.
+- $B_k$ is time bin $k$.
 
 Because `DV` is coded as 0 or 1, the mean of `DV` within a bin is the responder proportion.
 
@@ -1182,13 +1111,13 @@ emp_prob <- emp_dat %>%
 
 ### Step 8: Simulate replicate datasets
 
-For each simulation replicate `$s$`, where:
+For each simulation replicate $s$, where:
 
 $$
 s = 1, \dots, S
 $$
 
-and `$S$` is the number of simulations, the function draws subject-level random effects:
+and $S$ is the number of simulations, the function draws subject-level random effects:
 
 $$
 \boldsymbol{\eta}_i^{(s)}
@@ -1213,11 +1142,11 @@ $$
 
 where:
 
-- `$p_{ij}^{(s)}$` is the predicted response probability for subject `$i$` at observation `$j$` in simulation `$s$`.
-- `$\hat{\boldsymbol{\theta}}$` is the vector of estimated fixed effects.
-- `$\boldsymbol{\eta}_i^{(s)}$` is the simulated random-effect vector for subject `$i$`.
-- `$\mathbf{x}_{ij}$` is the covariate vector.
-- `$Y_{ij}^{(s)}$` is the simulated binary response.
+- $p_{ij}^{(s)}$ is the predicted response probability for subject $i$ at observation $j$ in simulation $s$.
+- $\hat{\boldsymbol{\theta}}$ is the vector of estimated fixed effects.
+- $\boldsymbol{\eta}_i^{(s)}$ is the simulated random-effect vector for subject $i$.
+- $\mathbf{x}_{ij}$ is the covariate vector.
+- $Y_{ij}^{(s)}$ is the simulated binary response.
 
 Then simulated binary responses are drawn as:
 
@@ -1254,7 +1183,7 @@ This is a numerical safeguard.
 
 ### Step 9: Compute simulated responder proportions
 
-For each simulation replicate `$s$` and time bin `$B_k$`, the simulated responder proportion is:
+For each simulation replicate $s$ and time bin $B_k$, the simulated responder proportion is:
 
 $$
 \hat{p}^{(s)}_k =
@@ -1265,11 +1194,11 @@ $$
 
 where:
 
-- `$\hat{p}^{(s)}_k$` is the simulated responder proportion in bin `$k$` for simulation `$s$`.
-- `$Y_{ij}^{(s)}$` is the simulated binary response.
-- `$n_k$` is the number of simulated observations in bin `$k$`.
+- $\hat{p}^{(s)}_k$ is the simulated responder proportion in bin $k$ for simulation $s$.
+- $Y_{ij}^{(s)}$ is the simulated binary response.
+- $n_k$ is the number of simulated observations in bin $k$.
 
-After `$S$` simulations, each time bin has a distribution of simulated responder proportions:
+After $S$ simulations, each time bin has a distribution of simulated responder proportions:
 
 $$
 \hat{p}^{(1)}_k,
@@ -1284,7 +1213,7 @@ $$
 
 The shaded band in the categorical VPC is a simulation-based prediction interval for the binned responder proportion.
 
-For a central `$100 \times \mathrm{ci}\%$` prediction interval:
+For a central $100 \times \mathrm{ci}\%$ prediction interval:
 
 $$
 \alpha = \frac{1 - \mathrm{ci}}{2}
@@ -1332,7 +1261,7 @@ Q_{0.5}
 \right)
 $$
 
-where `$Q_q$` is the empirical quantile at probability `$q$`.
+where $Q_q$ is the empirical quantile at probability $q$.
 
 For example, if:
 
@@ -1426,17 +1355,17 @@ This section maps the main code objects in `plot_categorical_vpc_nlmixr2()` to t
 
 In notation:
 
-- `DV` corresponds to `$Y_{ij}$`.
-- `pred` corresponds to `$p_{ij}^{(s)}$`.
-- `simDV` corresponds to `$Y_{ij}^{(s)}$`.
-- `timeBin` corresponds to `$B_k$`.
-- `empirical` corresponds to `$\hat{p}^{\mathrm{obs}}_k$`.
-- `simProp` corresponds to `$\hat{p}^{(s)}_k$`.
-- `piLow` corresponds to `$\mathrm{PI}_{k,\mathrm{low}}$`.
-- `piMed` corresponds to `$\mathrm{PI}_{k,\mathrm{median}}$`.
-- `piHigh` corresponds to `$\mathrm{PI}_{k,\mathrm{high}}$`.
-- `nSim` corresponds to `$S$`.
-- `nBins` corresponds to `$K$`.
+- `DV` corresponds to $Y_{ij}$.
+- `pred` corresponds to $p_{ij}^{(s)}$.
+- `simDV` corresponds to $Y_{ij}^{(s)}$.
+- `timeBin` corresponds to $B_k$.
+- `empirical` corresponds to $\hat{p}^{\mathrm{obs}}_k$.
+- `simProp` corresponds to $\hat{p}^{(s)}_k$.
+- `piLow` corresponds to $\mathrm{PI}_{k,\mathrm{low}}$.
+- `piMed` corresponds to $\mathrm{PI}_{k,\mathrm{median}}$.
+- `piHigh` corresponds to $\mathrm{PI}_{k,\mathrm{high}}$.
+- `nSim` corresponds to $S$.
+- `nBins` corresponds to $K$.
 
 The empirical observed responder proportion is calculated from the original data:
 
@@ -1498,7 +1427,7 @@ The teaching session uses both confidence intervals and prediction intervals, bu
 
 A confidence interval describes uncertainty about an unknown parameter.
 
-For example, for `$r$` responders out of `$n$` observations, the observed responder proportion is:
+For example, for $r$ responders out of $n$ observations, the observed responder proportion is:
 
 $$
 \hat{p} = \frac{r}{n}
