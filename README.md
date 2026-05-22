@@ -333,9 +333,9 @@ $$
 
 where:
 
-- \(Y_{ij}\) is the observed binary response for subject \(i\) at observation time \(j\).
-- \(Y_{ij} = 1\) means the subject is a responder.
-- \(Y_{ij} = 0\) means the subject is a non-responder.
+- \(Y_{ij}\) is the observed binary response for subject $\(i\)$ at observation time \(j\).
+- $\(Y_{ij} = 1\)$ means the subject is a responder.
+- $$\(Y_{ij} = 0\)$$ means the subject is a non-responder.
 
 ---
 
