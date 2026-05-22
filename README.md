@@ -417,14 +417,10 @@ where $\eta_{ij}$ is the linear predictor.
 A general binary response model can be written as:
 
 $$
-\mathrm{logit}(p_{ij}) =
-\beta_0
-+ \beta_{\mathrm{trt}} \cdot \mathrm{TRT}_i
-+ \beta_{\mathrm{wt}} \cdot \mathrm{WT}_i
-+ \beta_{\mathrm{sex}} \cdot \mathrm{SEX}_i
-+ \beta_{\mathrm{time}} \cdot t_{ij}
-+ b_i
+\mathrm{logit}(p_{ij}) = \beta_0 + \beta_{trt}\mathrm{TRT}_i + \beta_{wt}\mathrm{WT}_i + \beta_{sex}\mathrm{SEX}_i + \beta_{time}t_{ij} + b_i
 $$
+
+where:
 
 where:
 
@@ -556,8 +552,7 @@ SEX_female
 Mathematically, this categorical comparison is converted into an indicator variable:
 
 $$
-\mathrm{SEX\_female}_i =
-\mathbf{1}\left\{N(\mathrm{SEX}_i) = N(\mathrm{Female})\right\}
+\mathrm{SEX\_female}_i = \mathbf{1}\left\{N(\mathrm{SEX}_i) = N(\mathrm{Female})\right\}
 $$
 
 where:
