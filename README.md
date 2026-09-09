@@ -1461,3 +1461,31 @@ This teaching material uses the `mad` example dataset from the `xgxr` R package 
 ```text
 MIT License
 ```
+
+### Example 2
+
+```r
+logitHillBinom <- function() {
+  ini({
+    theta0_pop    <- -4
+    log_emax_pop  <- log(2)
+    log_et50_pop  <- log(15)
+    log_gamma_pop <- log(1.5)
+
+    eta_theta0 ~ 0.5     # random intercept only
+
+    n = fix(1)           # Bernoulli (1 trial per row)
+  })
+  model({
+    theta0 <- theta0_pop + eta_theta0
+    emax   <- exp(log_emax_pop)
+    et50   <- exp(log_et50_pop)
+    gamma  <- exp(log_gamma_pop)
+
+    lp <- theta0 + (emax * TIME^gamma) / (et50^gamma + TIME^gamma)
+    p  <- 1 / (1 + exp(-lp))
+
+    Y ~ binom(n, p)
+  })
+}
+```
